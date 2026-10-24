@@ -1,0 +1,248 @@
+/* Motion layer. Everything here is decoration on top of a page that already works at rest,
+   and all of it is skipped when the viewer asks for reduced motion. */
+
+@media (prefers-reduced-motion: no-preference) {
+  /* ---------- Brand: the ember seam breathes ---------- */
+  .logo-mark::after {
+    animation: ember-breathe 3.2s ease-in-out infinite;
+  }
+  .brand:hover .logo-mark::after {
+    animation-duration: 0.9s;
+  }
+
+  /* ---------- Page and view changes ---------- */
+  .main > .page {
+    animation: view-in 0.32s cubic-bezier(0.22, 0.8, 0.24, 1) both;
+  }
+
+  /* ---------- Discover: cards rise in, staggered ---------- */
+  .grid .card,
+  .foryou-card {
+    animation: rise-in 0.42s cubic-bezier(0.22, 0.8, 0.24, 1) both;
+  }
+  .grid .card:nth-child(1), .foryou-card:nth-child(1) { animation-delay: 0.02s; }
+  .grid .card:nth-child(2), .foryou-card:nth-child(2) { animation-delay: 0.05s; }
+  .grid .card:nth-child(3), .foryou-card:nth-child(3) { animation-delay: 0.08s; }
+  .grid .card:nth-child(4), .foryou-card:nth-child(4) { animation-delay: 0.11s; }
+  .grid .card:nth-child(5), .foryou-card:nth-child(5) { animation-delay: 0.14s; }
+  .grid .card:nth-child(6), .foryou-card:nth-child(6) { animation-delay: 0.17s; }
+  .grid .card:nth-child(7), .foryou-card:nth-child(7) { animation-delay: 0.2s; }
+  .grid .card:nth-child(8), .foryou-card:nth-child(8) { animation-delay: 0.23s; }
+  .grid .card:nth-child(n + 9) { animation-delay: 0.26s; }
+
+  .card,
+  .foryou-card {
+    transition: transform 0.25s cubic-bezier(0.22, 0.8, 0.24, 1), background 0.2s, box-shadow 0.25s, border-color 0.2s;
+  }
+  .card:hover,
+  .foryou-card:hover {
+    transform: translateY(-3px);
+  }
+  .card .avatar,
+  .foryou-card .avatar {
+    transition: transform 0.35s cubic-bezier(0.22, 0.8, 0.24, 1);
+  }
+  .card:hover .avatar,
+  .foryou-card:hover .avatar {
+    transform: scale(1.04) rotate(-1.5deg);
+  }
+
+  .tab {
+    transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
+  }
+
+  /* ---------- Presses feel physical ---------- */
+  .btn:active:not(:disabled),
+  .circle-btn:active:not(:disabled),
+  .icon-btn:active:not(:disabled),
+  .tab:active,
+  .create-pill:active,
+  .send-btn:active:not(:disabled) {
+    transform: scale(0.95);
+  }
+  .btn,
+  .circle-btn,
+  .icon-btn,
+  .create-pill {
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.2s, color 0.15s, opacity 0.15s, transform 0.12s;
+  }
+
+  /* ---------- Chat ---------- */
+  .chat-intro .avatar {
+    animation: float 5s ease-in-out infinite;
+  }
+  .msg {
+    animation: msg-in 0.34s cubic-bezier(0.22, 0.8, 0.24, 1) both;
+  }
+  .msg-user {
+    animation-name: msg-in-right;
+  }
+  .bubble.swipe-next {
+    animation: swipe-from-right 0.3s cubic-bezier(0.22, 0.8, 0.24, 1);
+  }
+  .bubble.swipe-prev {
+    animation: swipe-from-left 0.3s cubic-bezier(0.22, 0.8, 0.24, 1);
+  }
+  /* blinking caret at the end of a reply that's still streaming */
+  .bubble.streaming .md > :last-child::after {
+    content: '';
+    display: inline-block;
+    width: 0.5em;
+    height: 1.05em;
+    margin-left: 3px;
+    vertical-align: -0.16em;
+    border-radius: 2px;
+    background: var(--text);
+    animation: caret 0.9s steps(1) infinite;
+  }
+  .send-btn:not(:disabled) {
+    animation: send-ready 0.25s cubic-bezier(0.3, 1.6, 0.5, 1);
+  }
+  .help-btn:hover:not(:disabled) svg {
+    animation: scribble 0.6s ease-in-out;
+  }
+  .helper-panel,
+  .helper-result {
+    animation: rise-in 0.3s cubic-bezier(0.22, 0.8, 0.24, 1) both;
+  }
+  .helper-option {
+    animation: rise-in 0.3s cubic-bezier(0.22, 0.8, 0.24, 1) both;
+  }
+  .helper-option:nth-child(2) { animation-delay: 0.06s; }
+  .helper-option:nth-child(3) { animation-delay: 0.12s; }
+  .msg-actions .icon-btn.rated svg {
+    animation: pop 0.35s cubic-bezier(0.3, 1.6, 0.5, 1);
+  }
+  .attachment {
+    animation: pop 0.3s cubic-bezier(0.3, 1.6, 0.5, 1);
+  }
+
+  /* ---------- Sidebar ---------- */
+  .recent-row {
+    transition: background 0.15s, transform 0.2s;
+  }
+  .recent-row:hover {
+    transform: translateX(2px);
+  }
+
+  /* ---------- Fuel ---------- */
+  .fuel-level {
+    background-size: 200% 100%;
+    animation: fuel-shimmer 3s linear infinite;
+  }
+  .fuel-gauge.low .fuel-level {
+    animation: fuel-low 1.2s ease-in-out infinite;
+  }
+
+  /* ---------- Creator ---------- */
+  .cavatar-badge {
+    transition: transform 0.2s cubic-bezier(0.3, 1.6, 0.5, 1);
+  }
+  .cavatar-btn:hover .cavatar-badge {
+    transform: translateX(-50%) rotate(-12deg) scale(1.06);
+  }
+}
+
+@keyframes ember-breathe {
+  0%,
+  100% {
+    filter: brightness(1);
+    box-shadow: 0 0 8px 1px rgba(255, 150, 70, 0.75);
+  }
+  50% {
+    filter: brightness(1.35);
+    box-shadow: 0 0 14px 3px rgba(255, 170, 90, 0.95);
+  }
+}
+@keyframes view-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+@keyframes msg-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+@keyframes msg-in-right {
+  from {
+    opacity: 0;
+    transform: translate(10px, 6px);
+  }
+}
+@keyframes swipe-from-right {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+}
+@keyframes swipe-from-left {
+  from {
+    opacity: 0;
+    transform: translateX(-28px);
+  }
+}
+@keyframes caret {
+  50% {
+    opacity: 0;
+  }
+}
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+@keyframes send-ready {
+  from {
+    transform: scale(0.7);
+  }
+}
+@keyframes scribble {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  25% {
+    transform: rotate(-10deg) translateX(-1px);
+  }
+  50% {
+    transform: rotate(6deg) translateX(1px);
+  }
+  75% {
+    transform: rotate(-4deg);
+  }
+}
+@keyframes pop {
+  from {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+}
+@keyframes fuel-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+@keyframes fuel-low {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .fuel-level {
+    background-image: linear-gradient(90deg, #c2652a, #f2a25c, #ffd08a, #f2a25c, #c2652a);
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "charcoal",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Charcoal — a dark-first AI character chat platform (Character.ai-style clone) with mock streaming personas.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:single": "vite build --mode single",
+    "build:standalone": "vite build --mode standalone",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "lucide-react": "1.52.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "6.1.1",
+    "vite": "8.3.3",
+    "vite-plugin-singlefile": "2.3.3"
+  }
+}

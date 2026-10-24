@@ -1,0 +1,59 @@
+/* Layout: a fixed rail (sidebar) beside one scrolling column. Discover tops out at 1180px,
+   the chat column at 780px. Dark-only by design; neutrals sampled from the reference UI. */
+:root {
+  /* Surfaces */
+  --bg: #18181b;
+  --surface: #1e1e21;
+  --raised: #242428; /* message bubbles, cards */
+  --raised-2: #2c2c31;
+  --input: #202024;
+  --line: #26272b;
+  --line-strong: #303136; /* outlined buttons and inputs */
+
+  /* Text */
+  --text: #fafafa;
+  --text-msg: #dcdcdd;
+  --text-2: #a2a2ac;
+  --text-3: #6c6c73;
+  --action: #d6d6d8; /* roleplay *actions*: italic, a touch softer than dialogue */
+
+  /* Accent: white does the work, ember only marks the brand and the fuel */
+  --accent: #fafafa;
+  --accent-ink: #18181b;
+  --ember: #f2a25c;
+  --ember-strong: #ffbb7c;
+  --ember-ink: #1c1309;
+  --ember-soft: rgba(242, 162, 92, 0.12);
+  --ember-line: rgba(242, 162, 92, 0.32);
+  --glow: 0 0 0 1px rgba(250, 250, 250, 0.14), 0 0 22px -8px rgba(250, 250, 250, 0.22);
+
+  /* Semantic state (separate from the accent) */
+  --ok: #5fcf97;
+  --warn: #f0c35a;
+  --danger: #f07070;
+  --danger-soft: rgba(240, 112, 112, 0.1);
+
+  /* Type */
+  --font-ui: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Instrument Serif', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --font-mono: 'Geist Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.8125rem;
+  --fs-md: 0.9375rem;
+  --fs-lg: 1.0625rem;
+  --fs-xl: 1.375rem;
+  --fs-display: clamp(2rem, 1.4rem + 2.4vw, 3.25rem);
+
+  /* Shape */
+  --r-xs: 6px;
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-xl: 24px;
+
+  --sidebar-w: 280px;
+  --shadow-pop: 0 18px 50px -12px rgba(0, 0, 0, 0.75), 0 0 0 1px var(--line-strong);
+
+  color-scheme: dark;
+}

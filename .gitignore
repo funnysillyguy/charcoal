@@ -1,0 +1,9 @@
+node_modules/
+dist/
+dist-single/
+dist-standalone/
+artifact/
+.env
+.env.local
+.env.*.local
+*.log

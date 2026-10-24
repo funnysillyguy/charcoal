@@ -1,0 +1,160 @@
+/* Port from screenshots */
+.port .helper-head {
+  position: relative;
+  padding-right: 34px;
+}
+.port-close {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+}
+.port-slots {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.port-slot {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.port-slot-btn {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1.5px dashed var(--line-strong);
+  background: var(--input);
+  transition: border-color 0.15s, background 0.15s;
+}
+.port-slot-btn:hover {
+  border-color: #55565d;
+  background: #222226;
+}
+.port-slot.filled .port-slot-btn {
+  border-style: solid;
+}
+.port-slot-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+}
+.port-slot-empty {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: var(--text-2);
+}
+.port-slot .attachment-remove {
+  top: 6px;
+  right: 6px;
+}
+.port-slot-label {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+}
+.port-slot-hint {
+  font-size: 11px;
+  color: var(--text-3);
+  line-height: 1.35;
+}
+.port-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: var(--fs-md);
+}
+.port-summary span {
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+.port-desc {
+  font-size: var(--fs-sm);
+  color: var(--text-msg);
+  line-height: 1.55;
+}
+.port-crop {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 170px;
+  gap: 14px;
+  align-items: start;
+}
+.port-crop.loading {
+  height: 180px;
+  border-radius: 16px;
+  background: linear-gradient(90deg, var(--input), var(--raised-2), var(--input));
+  background-size: 200% 100%;
+  animation: shimmer 1.2s linear infinite;
+}
+.port-stage {
+  position: relative;
+  max-width: 100%;
+  justify-self: center;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: crosshair;
+  background: var(--input);
+}
+.port-stage img {
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  display: block;
+}
+.port-box {
+  position: absolute;
+  border: 2px solid #fff;
+  border-radius: 10px;
+  box-shadow: 0 0 0 9999px rgba(10, 10, 12, 0.55);
+  pointer-events: none;
+  transition: left 0.15s, top 0.15s, width 0.15s, height 0.15s;
+}
+.port-crop-side {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+}
+.port-preview {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  border: 2px solid var(--line-strong);
+  background: var(--input);
+}
+.port-zoom {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  text-align: center;
+}
+@media (max-width: 640px) {
+  .port-crop {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.creator-link.on {
+  background: var(--raised-2);
+}
+@media (max-width: 640px) {
+  .creator-link span {
+    display: none;
+  }
+  .creator-link {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    justify-content: center;
+    border: 1.5px solid var(--line-strong);
+  }
+  .port-slots {
+    gap: 8px;
+  }
+  .port-slot-hint {
+    display: none;
+  }
+}
