@@ -228,47 +228,106 @@
   color: var(--text-2);
 }
 
-/* ---------- Fuel gauge ---------- */
+/* ---------- Fuel gauge: a plain white bar that drains live ---------- */
+.fuel-wrap {
+  position: relative;
+  flex: none;
+}
 .fuel-gauge {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
   height: 40px;
-  padding: 0 12px;
+  padding: 0 14px;
   border-radius: 999px;
-  border: 1.5px solid var(--line-strong);
-  color: var(--text);
-  flex: none;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.fuel-gauge:hover .fuel-tube,
+.fuel-gauge[aria-expanded='true'] .fuel-tube {
+  background: rgba(255, 255, 255, 0.16);
 }
 .fuel-tube {
   position: relative;
-  width: 46px;
-  height: 8px;
-  border-radius: 8px;
-  background: var(--input);
-  box-shadow: inset 0 0 0 1px var(--line-strong);
+  display: block;
+  width: 72px;
+  height: 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
   overflow: hidden;
+  transition: background 0.15s;
 }
 .fuel-level {
   position: absolute;
-  inset: 0 auto 0 0;
-  border-radius: 8px;
-  background: linear-gradient(90deg, #c2652a, var(--ember), #ffd08a);
-  transition: width 0.5s ease;
-}
-.fuel-pct {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text-2);
-  font-variant-numeric: tabular-nums;
-  min-width: 3ch;
-  text-align: right;
+  inset: 0;
+  border-radius: 6px;
+  background: #fafafa;
+  transform-origin: left center;
+  transition: transform 0.18s linear;
 }
 .fuel-gauge.low .fuel-level {
-  background: linear-gradient(90deg, #b8372d, var(--danger));
+  background: #fafafa;
+  opacity: 0.55;
 }
-.fuel-gauge.low .fuel-pct {
-  color: var(--danger);
+.fuel-gauge.refilling .fuel-level {
+  transition: none;
+  opacity: 0.4;
+}
+.fuel-pop {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 60;
+  width: 240px;
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--raised);
+  border: 1px solid var(--line-strong);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  animation: pop-in 0.16s ease-out;
+}
+.fuel-pop strong {
+  display: block;
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+.fuel-pop strong span {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-3);
+}
+.fuel-pop p {
+  margin: 2px 0 0;
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+.fuel-pop-bar {
+  position: relative;
+  height: 6px;
+  margin: 12px 0 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+.fuel-pop-bar span {
+  position: absolute;
+  inset: 0;
+  background: #fafafa;
+  border-radius: 6px;
+  transform-origin: left center;
+  transition: transform 0.18s linear;
+}
+.fuel-pop .fuel-pop-hint {
+  font-size: 12px;
+  color: var(--text-3);
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
 }
 
 /* ---------- Refuel break ---------- */
@@ -1100,7 +1159,7 @@
     gap: 5px;
   }
   .fuel-gauge .fuel-tube {
-    width: 26px;
+    width: 48px;
   }
   .fuel-gauge .fuel-pct {
     display: none;

@@ -2,22 +2,61 @@
 import { useEffect, useRef, useState } from 'react';
 import { Fuel } from 'lucide-react';
 import { useFuel, REFUEL_MS } from '../lib/fuel.js';
+import { useSettings } from '../lib/store.jsx';
+import { usePopover } from './ui.jsx';
 import { formatCount } from '../lib/format.js';
 
 export function FuelGauge() {
   const fuel = useFuel();
-  const pct = Math.round(fuel.fraction * 100);
-  const low = fuel.fraction < 0.15;
-  const label = fuel.refueling
-    ? 'Refueling'
-    : `${formatCount(fuel.left)} of ${formatCount(fuel.capacity)} output tokens left`;
+  const { settings } = useSettings();
+  const pop = usePopover();
+  const refill = useRefuelProgress(fuel.refueling ? fuel.refuelStartedAt : null);
+  const fraction = fuel.refueling ? refill : fuel.fraction;
+  const low = !fuel.refueling && fuel.fraction < 0.2;
+  const secondsLeft = Math.max(0, Math.ceil(((1 - refill) * REFUEL_MS) / 1000));
+  const perMessage = Math.max(1, settings?.repliesPerMessage || 3) * 260; // rough output per message with parallel drafts
+  const messages = Math.floor(fuel.left / perMessage);
+  const label = fuel.refueling ? `On a break, ${secondsLeft}s left` : `${fuel.left.toLocaleString()} tokens left until a break`;
+
   return (
-    <div className={`fuel-gauge ${low ? 'low' : ''}`} title={label} aria-label={`Fuel: ${label}`} role="img">
-      <Fuel size={14} />
-      <span className="fuel-tube">
-        <span className="fuel-level" style={{ width: `${pct}%` }} />
-      </span>
-      <span className="fuel-pct">{pct}%</span>
+    <div className="fuel-wrap" ref={pop.ref}>
+      <button
+        type="button"
+        className={`fuel-gauge ${low ? 'low' : ''} ${fuel.refueling ? 'refilling' : ''}`}
+        onClick={pop.toggle}
+        aria-expanded={pop.open}
+        aria-label={`Usage: ${label}`}
+        title={label}
+      >
+        <span className="fuel-tube">
+          <span className="fuel-level" style={{ transform: `scaleX(${fraction})` }} />
+        </span>
+      </button>
+      {pop.open && (
+        <div className="fuel-pop" role="dialog" aria-label="Usage">
+          {fuel.refueling ? (
+            <>
+              <strong>Taking a {Math.round(REFUEL_MS / 1000)}s break</strong>
+              <p>Chat unlocks in {secondsLeft}s.</p>
+            </>
+          ) : (
+            <>
+              <strong>
+                {fuel.left.toLocaleString()} <span>/ {fuel.capacity.toLocaleString()}</span>
+              </strong>
+              <p>output tokens left until a {Math.round(REFUEL_MS / 1000)}s break</p>
+              <div className="fuel-pop-bar">
+                <span style={{ transform: `scaleX(${fuel.fraction})` }} />
+              </div>
+              <p className="fuel-pop-hint">
+                {messages > 0
+                  ? `About ${messages} more message${messages === 1 ? '' : 's'} at ${settings?.repliesPerMessage || 3} replies each.`
+                  : 'Your next message will likely trigger the break.'}
+              </p>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }

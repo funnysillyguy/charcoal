@@ -126,10 +126,6 @@
   }
 
   /* ---------- Fuel ---------- */
-  .fuel-level {
-    background-size: 200% 100%;
-    animation: fuel-shimmer 3s linear infinite;
-  }
   .fuel-gauge.low .fuel-level {
     animation: fuel-low 1.2s ease-in-out infinite;
   }
@@ -241,8 +237,4 @@
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .fuel-level {
-    background-image: linear-gradient(90deg, #c2652a, #f2a25c, #ffd08a, #f2a25c, #c2652a);
-  }
-}
+

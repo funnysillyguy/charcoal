@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import Avatar from '../Avatar.jsx';
 import SwipeController from './SwipeController.jsx';
+import { useSwipeGesture } from './useSwipeGesture.js';
 import { usePopover } from '../ui.jsx';
 import { Markdown } from '../../lib/markdown.jsx';
 import { useImageUrl } from '../../lib/images.js';
@@ -153,6 +154,19 @@ function ChatMessage({
     lastActive.current = message.active;
   });
 
+  // Swipe the whole reply sideways (latest character message only).
+  const total = message.variants?.length || 0;
+  const canGenerate = !message.greeting && !busy && total < MAX_SWIPES;
+  const onLast = message.active >= total - 1;
+  const swipe = useSwipeGesture({
+    enabled: message.role === 'char' && isLastChar && (total > 1 || canGenerate),
+    canPrev: message.active > 0,
+    canNext: !onLast || canGenerate,
+    nextIsNew: onLast,
+    onPrev: () => onSwipe(message.active - 1),
+    onNext: () => (onLast ? onRegenerate() : onSwipe(message.active + 1)),
+  });
+
   if (message.role === 'user') {
     const text = fillNames(message.text, names);
     return (
@@ -206,10 +220,19 @@ function ChatMessage({
         )}
       </div>
 
+      <div className={`swipe-track ${swipe.dragging ? 'dragging' : ''}`}>
+        {swipe.hint && (
+          <span className={`swipe-hint ${swipe.side}`} style={{ opacity: swipe.progress }}>
+            {swipe.hint === 'New response' && <RefreshCw size={14} />}
+            {swipe.hint}
+          </span>
+        )}
       <div
         key={variant?.id}
-        className={`bubble ${streaming && text ? 'streaming' : ''} ${swipeDir ? `swipe-${swipeDir}` : ''}`}
+        className={`bubble ${streaming && text ? 'streaming' : ''} ${swipeDir ? `swipe-${swipeDir}` : ''} ${isLastChar ? 'swipeable' : ''}`}
         aria-live={streaming ? 'polite' : undefined}
+        style={swipe.style}
+        {...swipe.bind}
       >
         {variant?.status === 'error' ? (
           <ErrorCard error={variant.error} busy={busy} onRetry={() => onRetry(variant.id)} onSettings={onOpenSettings} />
@@ -221,6 +244,7 @@ function ChatMessage({
         ) : (
           <Markdown text={text} streaming={streaming} />
         )}
+      </div>
       </div>
 
       {isLastChar && (

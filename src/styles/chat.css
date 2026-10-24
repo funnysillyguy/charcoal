@@ -851,3 +851,35 @@
     padding-left: 0;
   }
 }
+
+/* ---------- Swipe a reply sideways ---------- */
+.swipe-track {
+  position: relative;
+}
+.bubble.swipeable {
+  touch-action: pan-y;
+  cursor: grab;
+  will-change: transform;
+}
+.swipe-track.dragging .bubble {
+  cursor: grabbing;
+  user-select: none;
+}
+.swipe-hint {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text-2);
+  pointer-events: none;
+}
+.swipe-hint.left {
+  right: 14px;
+}
+.swipe-hint.right {
+  left: 14px;
+}
