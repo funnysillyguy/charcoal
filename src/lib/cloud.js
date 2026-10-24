@@ -105,7 +105,7 @@ async function refreshSession() {
   return refreshing;
 }
 
-async function accessToken() {
+export async function accessToken() {
   let s = session;
   if (!s) throw new CloudError('Signed out.', 'signed_out');
   if (s.expires_at - Date.now() < 60_000) s = await refreshSession();

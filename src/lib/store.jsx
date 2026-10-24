@@ -7,6 +7,7 @@ import { kv } from './storage.js';
 import { uid, deleteImages } from './images.js';
 import { loadSettings, saveSettings, providerStatus, SANDBOXED } from './settings.js';
 import { getSample } from './hostAI.js';
+import { useShared } from './endpoint.js';
 
 const STATE_KEY = 'state:v1';
 
@@ -430,7 +431,8 @@ export function useSettings() {
 /** Which engine writes replies right now (DeepSeek, Claude in the hosted page, or demo). */
 export function useProvider() {
   const { settings, hostAI } = useContext(SettingsContext);
-  return providerStatus(settings, hostAI);
+  const shared = useShared();
+  return providerStatus(settings, hostAI, shared);
 }
 
 /* ---------- derived selectors ---------- */

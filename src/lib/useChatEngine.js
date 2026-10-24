@@ -41,7 +41,8 @@ export function useChatEngine(character) {
       const flush = () => {
         timer = null;
         if (!content && !reasoning) return;
-        const est = estimateTokens(content) + estimateTokens(reasoning);
+        // Fuel counts the visible reply only; thinking tokens don't drain the tank.
+        const est = estimateTokens(content);
         estimated += est;
         consume(est);
         dispatch({ type: 'msg/append', charId, messageId, variantId, content, reasoning });
@@ -73,7 +74,8 @@ export function useChatEngine(character) {
         clearTimeout(timer);
         flush();
         // DeepSeek reports exact output tokens at the end; correct the running estimate.
-        if (typeof reported === 'number') consume(reported - estimated);
+        // (DeepSeek's reported count includes thinking tokens, so it isn't used for fuel.)
+        void reported;
         const msg = getState().chats[charId]?.messages.find((m) => m.id === messageId);
         const text = msg?.variants.find((v) => v.id === variantId)?.text || '';
         if (text.trim()) {

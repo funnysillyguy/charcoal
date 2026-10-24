@@ -27,15 +27,22 @@ export const DEFAULT_SETTINGS = {
   apiKey: '',
   model: DEFAULT_MODEL,
   baseUrl: '', // empty = DEFAULT_BASE_URL
-  thinking: false, // DeepSeek defaults thinking ON; temperature is ignored when it's on
-  repliesPerMessage: 3, // parallel drafts per new message, browsable as swipes
+  thinking: true, // better replies; DeepSeek ignores temperature while it's on
+  repliesPerMessage: 1, // drafts per new message; swipe past the last one for more
+  maxSentences: 5, // 0 = no cap
   maxTokensScale: 1,
   lastCheck: null, // { ok, at, message }
 };
 
+const SETTINGS_VERSION = 2; // v2: 1 reply, thinking on, 5-sentence cap for everyone
+
 export function loadSettings() {
   const saved = local.get(SETTINGS_KEY, {}) || {};
-  return { ...DEFAULT_SETTINGS, ...saved };
+  if ((saved.v || 1) < SETTINGS_VERSION) {
+    // One-time move to the new defaults; people can change them back in Settings.
+    Object.assign(saved, { repliesPerMessage: 1, thinking: true, maxSentences: 5 });
+  }
+  return { ...DEFAULT_SETTINGS, ...saved, v: SETTINGS_VERSION };
 }
 
 export function saveSettings(settings) {
@@ -51,7 +58,7 @@ export function effectiveBaseUrl(settings) {
   return ((settings.baseUrl || '').trim() || DEFAULT_BASE_URL).replace(/\/+$/, '');
 }
 
-export function providerStatus(settings, hostAI = 'none') {
+export function providerStatus(settings, hostAI = 'none', shared = null) {
   if (SANDBOXED) {
     if (hostAI === 'ready')
       return { mode: 'live', provider: 'claude', label: 'Claude', short: 'Claude', detail: 'Built into this page' };
@@ -60,7 +67,13 @@ export function providerStatus(settings, hostAI = 'none') {
     return { mode: 'demo', provider: 'demo', label: 'Demo replies', short: 'Demo replies', detail: 'Claude unavailable here' };
   }
   const key = effectiveKey(settings);
-  if (!key) return { mode: 'demo', provider: 'demo', label: 'Demo replies', short: 'Demo replies', detail: 'No API key' };
+  if (!key) {
+    if (shared?.signedIn && shared.enabled)
+      return { mode: 'live', provider: 'shared', label: 'Charcoal AI', short: 'Charcoal AI', detail: 'DeepSeek Flash, built in' };
+    if (shared?.signedIn && shared.enabled === false)
+      return { mode: 'demo', provider: 'demo', label: 'Demo replies', short: 'Demo replies', detail: 'Built-in AI is switched off' };
+    return { mode: 'demo', provider: 'demo', label: 'Demo replies', short: 'Demo replies', detail: 'Sign in for real replies' };
+  }
   const source = settings.apiKey ? 'saved key' : '.env key';
   const base = { provider: 'deepseek', label: 'DeepSeek', short: settings.model, source };
   if (settings.lastCheck && !settings.lastCheck.ok) {

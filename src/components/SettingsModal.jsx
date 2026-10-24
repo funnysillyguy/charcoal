@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
-import { CheckCircle2, Eye, EyeOff, Loader, PlugZap, ShieldAlert, XCircle } from 'lucide-react';
-import { Modal } from './ui.jsx';
+import { CheckCircle2, Eye, EyeOff, Loader, PlugZap, ShieldAlert, Sparkles, Users, XCircle } from 'lucide-react';
+import { Modal, useUI } from './ui.jsx';
+import { SHARED_BASE, SHARED_MODEL, setSharedKey, useShared, refreshShared } from '../lib/endpoint.js';
+import { CLOUD_ENABLED, CLOUD_KEY, accessToken } from '../lib/cloud.js';
 import { useSettings, useProvider } from '../lib/store.jsx';
 import { getSample } from '../lib/hostAI.js';
 import { listModels } from '../lib/deepseek.js';
@@ -21,6 +23,9 @@ function maskTail(key) {
 export default function SettingsModal({ open, onClose, onSaved }) {
   const { settings, updateSettings } = useSettings();
   const status = useProvider();
+  const shared = useShared();
+  const ui = useUI();
+  const [sharing, setSharing] = useState(false);
   const [draft, setDraft] = useState(settings);
   const [reveal, setReveal] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -28,6 +33,7 @@ export default function SettingsModal({ open, onClose, onSaved }) {
 
   useEffect(() => {
     if (open) {
+      refreshShared();
       setDraft(settings);
       setReveal(false);
       setResult(settings.lastCheck || null);
@@ -78,8 +84,21 @@ export default function SettingsModal({ open, onClose, onSaved }) {
     if (SANDBOXED) return testClaude();
     const next = save();
     const key = next.apiKey || ENV_KEY;
+    if (!key && shared.signedIn) {
+      setTesting(true);
+      setResult(null);
+      try {
+        await listModels({ baseUrl: SHARED_BASE, apiKey: await accessToken(), headers: { apikey: CLOUD_KEY } });
+        setResult({ ok: true, message: `Connected to Charcoal's built-in AI (${SHARED_MODEL}). No key needed.` });
+      } catch (e) {
+        setResult({ ok: false, message: e.message });
+      } finally {
+        setTesting(false);
+      }
+      return;
+    }
     if (!key) {
-      setResult({ ok: false, message: 'Paste an API key first.' });
+      setResult({ ok: false, message: CLOUD_ENABLED ? 'Sign in to use the built-in AI, or paste your own key.' : 'Paste an API key first.' });
       return;
     }
     setTesting(true);
@@ -107,7 +126,23 @@ export default function SettingsModal({ open, onClose, onSaved }) {
     }
   };
 
-  const n = draft.repliesPerMessage || 3;
+  const n = draft.repliesPerMessage || 1;
+  const sentences = draft.maxSentences ?? 5;
+
+  const shareKey = async (key) => {
+    setSharing(true);
+    try {
+      const r = await setSharedKey(key);
+      ui.toast(r.enabled ? 'Built-in AI is on for everyone' : 'Built-in AI is off', 'ok');
+    } catch (e) {
+      ui.toast(e.message, 'error');
+    } finally {
+      setSharing(false);
+      refreshShared();
+    }
+  };
+  const used = shared.usedToday || 0;
+  const limit = shared.dailyLimit || 0;
 
   return (
     <Modal
@@ -161,11 +196,65 @@ export default function SettingsModal({ open, onClose, onSaved }) {
         </>
       )}
 
+      {!SANDBOXED && CLOUD_ENABLED && (
+        <div className="builtin-card">
+          <div className="builtin-head">
+            <Sparkles size={16} />
+            <strong>Charcoal AI</strong>
+            <span className={`status-dot ${shared.enabled ? 'live' : shared.signedIn ? 'demo' : 'unverified'}`} />
+          </div>
+          {!shared.signedIn ? (
+            <p>
+              Free built-in AI for everyone with an account, no key needed.{' '}
+              <button type="button" className="link-btn" onClick={() => { onClose(); ui.openAccount(); }}>
+                Sign in or create an account
+              </button>
+            </p>
+          ) : shared.enabled ? (
+            <>
+              <p>{settings.apiKey ? 'Available, but your own key below takes priority.' : 'You’re on the built-in AI (DeepSeek Flash). Nothing to set up.'}</p>
+              {limit > 0 && (
+                <div className="builtin-usage">
+                  <span>Today: {used.toLocaleString()} / {limit.toLocaleString()} tokens</span>
+                  <div className="fuel-pop-bar"><span style={{ transform: `scaleX(${Math.min(1, used / limit)})` }} /></div>
+                </div>
+              )}
+            </>
+          ) : (
+            <p>The owner hasn’t switched the built-in AI on yet.</p>
+          )}
+          {shared.owner && (
+            <div className="builtin-owner">
+              <Users size={15} />
+              <span>
+                {shared.enabled ? `On for everyone, using your key ••••${shared.keyTail}. It never leaves the server.` : 'Let everyone with an account use your key. It stays on the server; nobody can see it.'}
+              </span>
+              {shared.enabled ? (
+                <div className="builtin-owner-actions">
+                  {settings.apiKey && settings.apiKey.slice(-4) !== shared.keyTail && (
+                    <button type="button" className="btn btn-ghost btn-sm" disabled={sharing} onClick={() => shareKey(settings.apiKey)}>
+                      Use my current key
+                    </button>
+                  )}
+                  <button type="button" className="btn btn-ghost btn-sm" disabled={sharing} onClick={() => shareKey(null)}>
+                    Turn off
+                  </button>
+                </div>
+              ) : (
+                <button type="button" className="btn btn-primary btn-sm" disabled={sharing || !(draft.apiKey || settings.apiKey)} onClick={() => shareKey((draft.apiKey || settings.apiKey).trim())}>
+                  {sharing ? <Loader size={14} className="spin" /> : <Users size={14} />} Share my key with everyone
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {!SANDBOXED && (
       <>
       <div className="field">
         <label className="field-label" htmlFor="ds-key">
-          DeepSeek API key
+          {CLOUD_ENABLED ? 'Your own DeepSeek key (optional)' : 'DeepSeek API key'}
           {settings.apiKey && !keyChanged && <span className="count">saved {maskTail(settings.apiKey)}</span>}
         </label>
         <div className="input-group">
@@ -250,9 +339,20 @@ export default function SettingsModal({ open, onClose, onSaved }) {
           ))}
         </div>
         <p className="field-hint">
-          Drafts written in parallel for every message you send; swipe between them. Regenerate adds one more at a time,
-          up to 40 per message. Costs scale with the number of drafts.
+          Drafts written at once for every message you send. Swipe left past the last one for another, up to 40.
         </p>
+      </div>
+
+      <div className="field">
+        <span className="field-label">Reply length</span>
+        <div className="segmented" role="radiogroup" aria-label="Maximum sentences per reply">
+          {[[3, '3 sentences'], [5, '5'], [8, '8'], [0, 'No cap']].map(([v, label]) => (
+            <button key={v} type="button" role="radio" aria-checked={sentences === v} className={sentences === v ? 'active' : ''} onClick={() => set({ maxSentences: v })}>
+              {label}
+            </button>
+          ))}
+        </div>
+        <p className="field-hint">Most sentences a reply can have, actions included. “No cap” uses each character’s own length setting.</p>
       </div>
 
       {!SANDBOXED && (

@@ -144,10 +144,17 @@ const ChatInput = forwardRef(function ChatInput({ character, busy, onSend, onSto
           <span className="status-dot demo" />
           {SANDBOXED
             ? 'Claude isn’t available in this view, so replies are offline demo text.'
-            : 'Demo replies. Add your DeepSeek API key for real responses.'}
-          {!SANDBOXED && (
+            : status.detail === 'Sign in for real replies'
+              ? 'Demo replies. Sign in (free) to chat with the real AI.'
+              : 'Demo replies. The built-in AI is off right now.'}
+          {!SANDBOXED && status.detail === 'Sign in for real replies' && (
+            <button type="button" className="composer-note-btn" onClick={ui.openAccount}>
+              <KeyRound size={13} /> Sign in
+            </button>
+          )}
+          {!SANDBOXED && status.detail !== 'Sign in for real replies' && (
             <button type="button" className="composer-note-btn" onClick={ui.openSettings}>
-              <KeyRound size={13} /> Add key
+              <KeyRound size={13} /> Settings
             </button>
           )}
         </div>
@@ -287,7 +294,9 @@ const ChatInput = forwardRef(function ChatInput({ character, busy, onSend, onSto
             ? 'Replies are written by Claude, built into this page.'
             : status.provider === 'deepseek'
               ? `Replies are written by DeepSeek (${status.short}).`
-              : 'Replies are offline demo text.'}{' '}
+              : status.provider === 'shared'
+                ? 'Replies are written by Charcoal AI (DeepSeek Flash).'
+                : 'Replies are offline demo text.'}{' '}
           Enter sends, Shift+Enter adds a line. Paste or drop images to attach them.
           {text.length > MAX_LEN * 0.8 && ` ${text.length}/${MAX_LEN} characters.`}
         </p>

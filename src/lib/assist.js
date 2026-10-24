@@ -2,7 +2,8 @@
 // Uses DeepSeek (JSON mode) when a key is set, Claude when hosted on claude.ai, else an offline template.
 import { completeJSON, ApiError } from './deepseek.js';
 import { getSample, sampleError, dataUrlToBlob } from './hostAI.js';
-import { effectiveKey, effectiveBaseUrl, SANDBOXED, supportsVision } from './settings.js';
+import { SANDBOXED, supportsVision } from './settings.js';
+import { resolveEndpoint } from './endpoint.js';
 import { fillNames, firstName, stripMarkdown } from './format.js';
 import { CATEGORIES } from '../data/characters.js';
 import { SPECIES } from './portraits.js';
@@ -23,9 +24,9 @@ async function askJSON({ settings, prompt, images = [], signal, tier = 'default'
       throw sampleError(e);
     }
   }
-  const apiKey = effectiveKey(settings);
-  if (!apiKey) return { offline: true };
-  const useImages = images.length && supportsVision(settings.model);
+  const ep = await resolveEndpoint(settings);
+  if (!ep) return { offline: true };
+  const useImages = images.length && supportsVision(ep.model);
   if (requireVision && images.length && !useImages) {
     throw new ApiError(`Reading screenshots needs a vision model. Set the model to deepseek-flash in Settings.`, {
       kind: 'vision',
@@ -35,11 +36,12 @@ async function askJSON({ settings, prompt, images = [], signal, tier = 'default'
     ? [{ type: 'text', text: prompt }, ...images.map((url) => ({ type: 'image_url', image_url: { url } }))]
     : prompt;
   const value = await completeJSON({
-    baseUrl: effectiveBaseUrl(settings),
-    apiKey,
+    baseUrl: ep.baseUrl,
+    apiKey: ep.apiKey,
+    headers: ep.headers,
     signal,
     body: {
-      model: settings.model,
+      model: ep.model,
       messages: [
         { role: 'system', content: 'You are a creative writing assistant for a character roleplay app. Reply with one JSON object only.' },
         { role: 'user', content },

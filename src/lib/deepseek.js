@@ -78,7 +78,7 @@ function networkError(err, baseUrl) {
  *   { type: 'finish', reason }  finish_reason from the API
  *   { type: 'usage', usage }    token usage, when the API includes it
  */
-export async function* streamChat({ baseUrl, apiKey, body, signal }) {
+export async function* streamChat({ baseUrl, apiKey, body, signal, headers = {} }) {
   let res;
   try {
     res = await fetch(`${baseUrl}/chat/completions`, {
@@ -87,6 +87,7 @@ export async function* streamChat({ baseUrl, apiKey, body, signal }) {
         'Content-Type': 'application/json',
         Accept: 'text/event-stream',
         Authorization: `Bearer ${apiKey}`,
+        ...headers,
       },
       body: JSON.stringify({ ...body, stream: true }),
       signal,
@@ -160,11 +161,11 @@ export async function* streamChat({ baseUrl, apiKey, body, signal }) {
 }
 
 /** GET /models — used by the Settings "Test connection" button. Free, and proves the key works. */
-export async function listModels({ baseUrl, apiKey, signal }) {
+export async function listModels({ baseUrl, apiKey, signal, headers = {} }) {
   let res;
   try {
     res = await fetch(`${baseUrl}/models`, {
-      headers: { Authorization: `Bearer ${apiKey}` },
+      headers: { Authorization: `Bearer ${apiKey}`, ...headers },
       signal,
     });
   } catch (err) {
@@ -176,12 +177,12 @@ export async function listModels({ baseUrl, apiKey, signal }) {
 }
 
 /** Non-streaming completion that returns parsed JSON (DeepSeek JSON output mode). */
-export async function completeJSON({ baseUrl, apiKey, body, signal }) {
+export async function completeJSON({ baseUrl, apiKey, body, signal, headers = {} }) {
   let res;
   try {
     res = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}`, ...headers },
       body: JSON.stringify({ ...body, stream: false, response_format: { type: 'json_object' } }),
       signal,
     });

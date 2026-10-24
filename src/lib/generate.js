@@ -2,7 +2,8 @@
 import { streamChat } from './deepseek.js';
 import { buildRequest } from './prompt.js';
 import { demoStream } from './demoEngine.js';
-import { effectiveKey, effectiveBaseUrl, SANDBOXED } from './settings.js';
+import { SANDBOXED } from './settings.js';
+import { resolveEndpoint } from './endpoint.js';
 import { getSample, sampleStream, toSampleTurns } from './hostAI.js';
 
 /**
@@ -43,8 +44,8 @@ export async function* generateReply({ character, persona, chat, messageId, vari
     return;
   }
 
-  const apiKey = effectiveKey(settings);
-  if (!apiKey) {
+  const ep = await resolveEndpoint(settings);
+  if (!ep) {
     const recentReplies = chat.messages
       .filter((m) => m.role === 'char')
       .slice(-6)
@@ -68,8 +69,8 @@ export async function* generateReply({ character, persona, chat, messageId, vari
     isSwipe: kind !== 'primary',
     alternate: kind === 'parallel',
     swipeDrafts: kind === 'regen' ? otherDrafts : [],
-    settings,
+    settings: { ...settings, model: ep.model },
   });
-  yield { type: 'meta', meta: { provider: 'deepseek', kind, ...meta } };
-  yield* streamChat({ baseUrl: effectiveBaseUrl(settings), apiKey, body, signal });
+  yield { type: 'meta', meta: { provider: ep.shared ? 'shared' : 'deepseek', kind, ...meta } };
+  yield* streamChat({ baseUrl: ep.baseUrl, apiKey: ep.apiKey, headers: ep.headers, body, signal });
 }

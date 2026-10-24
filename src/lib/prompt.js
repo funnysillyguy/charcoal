@@ -42,7 +42,7 @@ export function parseExamples(raw) {
   return turns.map((t) => ({ ...t, text: t.text.replace(/\n{3,}/g, '\n\n').trim() })).filter((t) => t.text);
 }
 
-export function buildSystemPrompt({ character, persona, mood, swipeDrafts = [], alternate = false }) {
+export function buildSystemPrompt({ character, persona, mood, swipeDrafts = [], alternate = false, maxSentences = 0 }) {
   const names = { user: persona?.name || 'User', char: character.name };
   const def = character.definition || {};
   const settings = character.settings || {};
@@ -74,7 +74,9 @@ export function buildSystemPrompt({ character, persona, mood, swipeDrafts = [], 
       '- Put actions, gestures, sensory descriptions, and inner thoughts in markdown asterisks, for example: *smirks, glancing over at you*. Write spoken dialogue as plain text.',
       "- Speak and act only for {{char}} and minor background characters. Never write {{user}}'s dialogue, actions, thoughts, or decisions.",
       '- React to what {{user}} actually said or did, then keep the scene moving with a concrete detail, a question, or a development.',
-      `- ${LENGTH_RULES[verbosity] || LENGTH_RULES[2]}`,
+      maxSentences > 0
+        ? `- Keep every reply to ${maxSentences} sentences or fewer in total, counting *actions* and dialogue together. Make each sentence count.`
+        : `- ${LENGTH_RULES[verbosity] || LENGTH_RULES[2]}`,
       `- ${creativityRule(settings.creativity ?? 50)}`,
       '- If {{user}} shares an image, look at it closely and react in character to specific things you notice in it.',
       '- Keep formatting light: asterisks for actions, **bold** rarely, code blocks only when {{char}} would actually write code. No headings or bullet lists unless {{char}} would naturally use them.',
@@ -212,6 +214,7 @@ export async function buildRequest({ character, persona, chat, uptoIndex, isSwip
     mood: chat.mood,
     swipeDrafts: isSwipe ? swipeDrafts || [] : [],
     alternate: !!alternate,
+    maxSentences: Number(settings.maxSentences) || 0,
   });
   const history = await buildHistory({ messages: chat.messages, uptoIndex, names });
 
@@ -229,7 +232,7 @@ export async function buildRequest({ character, persona, chat, uptoIndex, isSwip
     stream_options: { include_usage: true },
   };
   if (settings.thinking) {
-    body.reasoning_effort = 'low';
+    body.reasoning_effort = 'medium';
     body.max_tokens += 2048; // reasoning tokens count against max_tokens
   }
   return { body, meta: { temperature, model: settings.model, thinking: !!settings.thinking } };
