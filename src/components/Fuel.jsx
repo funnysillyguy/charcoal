@@ -1,4 +1,4 @@
-// Fuel gauge (top right) and the 60-second refuel break.
+// Fuel gauge (top right) and the 25-second refuel break.
 import { useEffect, useRef, useState } from 'react';
 import { Fuel } from 'lucide-react';
 import { useFuel, REFUEL_MS } from '../lib/fuel.js';

@@ -1,19 +1,22 @@
 // Fuel tank: a cap on generated output tokens. Every draft drains it (parallel swipes included).
-// When it runs dry, chat pauses for a 60-second refuel, then the tank is full again.
+// When it runs dry, chat pauses for a short refuel (25 s), then the tank is full again.
 // Stored per browser so a reload mid-refuel keeps counting down.
 import { useSyncExternalStore } from 'react';
 import { local } from './storage.js';
 
 const KEY = 'charcoal:fuel';
-export const DEFAULT_CAPACITY = 2_000_000;
-export const REFUEL_MS = 60_000;
+export const DEFAULT_CAPACITY = 2_000;
+export const REFUEL_MS = 25_000;
+const VERSION = 2; // bump when the defaults change so old saved tanks reset to them
 
 let state = normalize(local.get(KEY, null));
 const listeners = new Set();
 let timer = null;
 
 function normalize(s) {
+  if (!s || s.v !== VERSION) return { v: VERSION, used: 0, capacity: DEFAULT_CAPACITY, refuelStartedAt: null };
   return {
+    v: VERSION,
     used: Math.max(0, Number(s?.used) || 0),
     capacity: Math.max(1000, Number(s?.capacity) || DEFAULT_CAPACITY),
     refuelStartedAt: s?.refuelStartedAt || null,

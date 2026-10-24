@@ -7,7 +7,7 @@ import { fillNames, firstName, stripMarkdown } from './format.js';
 import { CATEGORIES } from '../data/characters.js';
 import { SPECIES } from './portraits.js';
 
-async function askJSON({ settings, prompt, images = [], signal, tier = 'default', requireVision = false }) {
+async function askJSON({ settings, prompt, images = [], signal, tier = 'default', requireVision = false, maxTokens = 2200, temperature = 1.0 }) {
   if (SANDBOXED) {
     const sample = await getSample();
     if (!sample) return { offline: true };
@@ -44,8 +44,8 @@ async function askJSON({ settings, prompt, images = [], signal, tier = 'default'
         { role: 'system', content: 'You are a creative writing assistant for a character roleplay app. Reply with one JSON object only.' },
         { role: 'user', content },
       ],
-      temperature: 1.0,
-      max_tokens: 2200,
+      temperature,
+      max_tokens: maxTokens,
       thinking: { type: 'disabled' },
     },
   });
@@ -198,31 +198,35 @@ Reply with only JSON in this shape:
  * Read screenshots of a character the user already has on another platform and transcribe it.
  * shots: { profile?, greeting?, image? } as data URLs. Returns the fields plus an avatar crop box.
  */
+export const PORT_MAX_SHOTS = 6;
+
+/**
+ * Read screenshots of a character from another app. Returns an exact transcription (with bold/italics kept
+ * as Markdown), an optional improved rewrite the model only offers when it's worth it, and where the avatar is.
+ * shots: data URLs in the order the user added them.
+ */
 export async function readScreenshots({ settings, shots, signal }) {
-  const order = [
-    ['profile', "the character's profile or description page"],
-    ['greeting', "a chat showing the character's greeting / first message"],
-    ['image', 'the character\'s picture (art to use as the profile image)'],
-  ].filter(([k]) => shots[k]);
-  if (!order.length) throw new Error('Add at least one screenshot.');
+  if (!shots?.length) throw new Error('Add at least one screenshot.');
+  const list = shots.map((_, i) => `Image ${i + 1}`).join(', ');
 
-  const list = order.map(([, label], i) => `Image ${i + 1}: ${label}`).join('\n');
-  const imageIdx = order.findIndex(([k]) => k === 'image') + 1;
+  const prompt = `A user is moving a roleplay character to a new app from another chat platform (Character.ai, Polybuzz, Talkie, Chai, Janitor and similar). Read the screenshots (${list}) and transcribe the character. The screenshots can be in any order and may include: the character's profile page, the greeting / first message, an enlarged view of the avatar, the definition page.
 
-  const prompt = `A user is moving a roleplay character they made on another chat platform (Character.ai, Polybuzz, Talkie, Chai, Janitor and similar) over to a new app. Read their screenshots and transcribe the character.
+TRANSCRIBE EXACTLY
+- Copy text exactly as shown: same wording, spelling, emoji, punctuation, quotes and line breaks. Don't summarize or invent.
+- Keep the styling as Markdown. Look closely at font weight and slant: text drawn in a heavier, bold weight becomes **like this**; italic text becomes *like this*; bold italic becomes ***like this***. Many apps show narration in bold and spoken dialogue in a regular weight, so wrap each bold stretch separately and leave the regular-weight parts plain. Text that already shows literal asterisks stays as written.
+- Keep paragraph breaks as blank lines. Keep ((OOC notes)), ---dividers--- and similar as shown.
+- If text is cut off, copy what's visible. If a field isn't visible anywhere, use "".
+- Ignore app interface text: buttons, menus, tab labels, ads, "This is A.I. and not a real person", interaction and like counts, the user's own messages.
+- In the greeting, if the character addresses the reader by a specific username, replace it with {{user}}.
+- "greeting" is the character's ENTIRE first chat message, top to bottom: include any scene-setting or intro paragraphs that come before the dialogue. Never move part of the greeting into another field.
+- "description" is the character's profile description/about text. "personality" is any other definition, scenario or personality text that's visible.
 
-${list}
+IMPROVE ONLY IF IT HELPS
+After the exact copy, decide whether the writing would clearly benefit from a light edit: typos, grammar, clunky or run-on sentences, a stat list crammed into one line that reads better one item per line, inconsistent tense or POV. If it already reads well, return "improved": {}.
+When you do edit: keep the same voice, facts, names, point of view and length (within about 20%). Keep the same Markdown styling convention (if narration is bold, keep it bold). Keep {{user}}. Never add new facts, kinks, backstory or lines of dialogue. Only include fields you actually changed, and give a short note (under 15 words) saying what you changed.
 
-Rules:
-- Copy text exactly as shown: same wording, spelling, emoji, line breaks and *asterisks*. Do not rewrite, summarize, improve or invent anything.
-- If text is cut off, copy what is visible. If a field isn't visible, use an empty string.
-- Ignore app interface text (buttons, menus, ads, "This is A.I. and not a real person", like counts, the user's own messages).
-- In the greeting, if the character addresses the reader by a specific username, replace that username with {{user}}.
-- avatar: the square region to use as the profile picture. ${
-    imageIdx
-      ? `Use image ${imageIdx}: pick the region that frames the character's face/head and shoulders.`
-      : 'Find the character\'s avatar picture in the screenshots (usually a circle or rounded square near the name) and give its bounding box.'
-  } Coordinates are fractions (0 to 1) of that image's width and height. null if there is no usable picture.
+AVATAR
+Pick the single best picture of the character to use as a profile picture: prefer an enlarged/zoomed avatar view, then a standalone character image, then the small avatar on the profile page. Give its image number and a bounding box tightly around the picture (for a round avatar, the box around the circle). Coordinates are fractions (0 to 1) of that image's width and height. "shape" is "circle" if the picture is shown as a circle, else "square". null if there's no usable picture.
 
 Reply with only JSON:
 {
@@ -230,51 +234,61 @@ Reply with only JSON:
   "tagline": "",
   "description": "",
   "greeting": "",
+  "personality": "",
   "creator": "creator handle without @",
   "platform": "platform name if recognizable",
   "tags": [],
-  "personality": "any other visible definition/personality/scenario text, copied exactly",
   "category": "best fit: one of ${CATEGORIES.join(', ')}",
-  "avatar": { "image": 1, "x": 0, "y": 0, "w": 0, "h": 0 }
+  "avatar": { "image": 1, "x": 0, "y": 0, "w": 0, "h": 0, "shape": "circle" },
+  "improved": { "description": "", "greeting": "" },
+  "improvedNote": ""
 }`;
 
-  const res = await askJSON({
-    settings,
-    prompt,
-    images: order.map(([k]) => shots[k]),
-    signal,
-    tier: 'default',
-    requireVision: true,
-  });
+  const res = await askJSON({ settings, prompt, images: shots, signal, tier: 'default', requireVision: true, maxTokens: 7000, temperature: 0.3 });
   if (res.offline) {
     throw new ApiError('Reading screenshots needs AI. Add your DeepSeek key in Settings (or open Charcoal inside claude.ai).', {
       kind: 'auth',
     });
   }
   const v = res.value || {};
-  const str = (x, n) => (typeof x === 'string' ? x.trim().slice(0, n) : '');
+  const str = (x, n) => (typeof x === 'string' ? x.replace(/\r\n/g, '\n').trim().slice(0, n) : '');
   const num = (x) => (typeof x === 'number' && Number.isFinite(x) ? Math.min(1, Math.max(0, x)) : null);
+  const CAPS = { tagline: 300, description: 1500, greeting: 4096, personality: 8000 };
+
   let avatar = null;
   const a = v.avatar;
   if (a && typeof a === 'object') {
     const idx = Math.round(Number(a.image)) - 1;
     const box = { x: num(a.x), y: num(a.y), w: num(a.w), h: num(a.h) };
-    if (order[idx] && box.x != null && box.y != null && box.w > 0.01 && box.h > 0.01) {
-      avatar = { source: order[idx][0], box };
+    if (shots[idx] && box.x != null && box.y != null && box.w > 0.01 && box.h > 0.01) {
+      avatar = { index: idx, box, shape: a.shape === 'square' ? 'square' : 'circle' };
     }
   }
-  if (!avatar && shots.image) avatar = { source: 'image', box: null };
+
+  const exact = {
+    tagline: str(v.tagline, CAPS.tagline),
+    description: str(v.description, CAPS.description),
+    greeting: str(v.greeting, CAPS.greeting),
+    personality: str(v.personality, CAPS.personality),
+  };
+  const improved = {};
+  if (v.improved && typeof v.improved === 'object') {
+    for (const k of Object.keys(CAPS)) {
+      const t = str(v.improved[k], CAPS[k]);
+      if (t && t !== exact[k]) improved[k] = t;
+    }
+  }
+
   return {
     provider: res.provider,
     name: str(v.name, 40),
-    tagline: str(v.tagline, 90),
-    description: str(v.description, 500),
-    greeting: str(v.greeting, 4096),
+    ...exact,
     creator: str(v.creator, 40).replace(/^@/, ''),
     platform: str(v.platform, 40),
     tags: (Array.isArray(v.tags) ? v.tags : []).map((t) => str(t, 24)).filter(Boolean).slice(0, 6),
-    personality: str(v.personality, 3500),
     category: CATEGORIES.includes(v.category) ? v.category : 'Roleplay',
     avatar,
+    improved,
+    improvedNote: Object.keys(improved).length ? str(v.improvedNote, 140) : '',
   };
 }

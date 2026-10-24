@@ -12,8 +12,10 @@ function renderInline(text, keyBase, streaming) {
   let last = 0;
   let m;
   let i = 0;
-  INLINE.lastIndex = 0;
-  while ((m = INLINE.exec(text))) {
+  // Fresh regex per call: bold recurses into renderInline, and a shared /g regex would have its
+  // lastIndex reset by the inner call, making the outer loop re-match the same token forever.
+  const re = new RegExp(INLINE.source, 'g');
+  while ((m = re.exec(text))) {
     if (m.index > last) out.push(text.slice(last, m.index));
     const tok = m[0];
     const key = `${keyBase}-${i++}`;

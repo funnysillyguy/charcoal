@@ -36,7 +36,7 @@ import { readCardFile } from '../lib/cards.js';
 import { fillNames, formatCount } from '../lib/format.js';
 import { consume, estimateTokens } from '../lib/fuel.js';
 
-const LIMITS = { name: 40, tagline: 90, description: 500, greeting: 4096, persona: 4000, mood: 120, examples: 4000 };
+const LIMITS = { name: 40, tagline: 300, description: 1500, greeting: 4096, persona: 8000, mood: 120, examples: 4000 };
 const MAX_GREETINGS = 5;
 
 const VISIBILITY = [
