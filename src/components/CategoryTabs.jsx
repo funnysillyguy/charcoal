@@ -27,7 +27,7 @@ export default function CategoryTabs({ tabs, active, onChange, counts }) {
           >
             <Icon size={15} />
             {t}
-            <span className="tab-count">{counts[t] ?? 0}</span>
+            {counts && <span className="tab-count">{counts[t] ?? 0}</span>}
           </button>
         );
       })}

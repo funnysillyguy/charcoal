@@ -1,5 +1,5 @@
 import { PenTool, SearchX } from 'lucide-react';
-import CharacterCard from './CharacterCard.jsx';
+import CharacterTile from './discover/CharacterTile.jsx';
 import { EmptyState, useUI } from './ui.jsx';
 
 export default function CharacterGrid({ characters, query, tab }) {
@@ -38,9 +38,9 @@ export default function CharacterGrid({ characters, query, tab }) {
   }
 
   return (
-    <div className="grid">
-      {characters.map((c) => (
-        <CharacterCard key={c.id} character={c} />
+    <div className="tile-grid">
+      {characters.map((c, i) => (
+        <CharacterTile key={c.id} character={c} style={{ '--i': Math.min(i, 12) }} />
       ))}
     </div>
   );

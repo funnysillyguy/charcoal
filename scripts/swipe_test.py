@@ -15,7 +15,7 @@ async def main():
         await pg.goto('http://localhost:4175/')
         await pg.evaluate("""localStorage.setItem('charcoal:settings', JSON.stringify({apiKey:'sk-test', model:'deepseek-flash', baseUrl:'http://localhost:8787/v1', repliesPerMessage:3}))""")
         await pg.reload(); await pg.wait_for_timeout(700)
-        await pg.click('.card-main >> nth=1'); await pg.wait_for_timeout(400)
+        await pg.click('.tile-grid .tile-main >> nth=1'); await pg.wait_for_timeout(400)
         await pg.fill('textarea', 'hey there'); await pg.keyboard.press('Enter'); await pg.wait_for_timeout(2500)
         print('start', await count(pg))
         await drag(pg, -220); print('left ->', await count(pg))

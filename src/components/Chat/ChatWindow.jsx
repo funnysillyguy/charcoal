@@ -252,7 +252,7 @@ export default function ChatWindow({ characterId }) {
   ];
 
   return (
-    <div className="page chat" onDragEnter={onDragEnter} onDragOver={(e) => dragging && e.preventDefault()} onDragLeave={onDragLeave} onDrop={onDrop}>
+    <div className="page chat" style={{ '--chat-light': character.avatar?.palette?.[1] || '#8a8a96' }} onDragEnter={onDragEnter} onDragOver={(e) => dragging && e.preventDefault()} onDragLeave={onDragLeave} onDrop={onDrop}>
       <header className="chat-head">
         <button type="button" className="icon-btn nav-menu" onClick={ui.openDrawer} aria-label="Open menu">
           <Menu size={22} />

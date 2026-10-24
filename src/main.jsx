@@ -8,6 +8,7 @@ import './styles/chat.css';
 import './styles/modals.css';
 import './styles/layout.css';
 import './styles/motion.css';
+import './styles/discover.css';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

@@ -171,10 +171,9 @@ function ChatMessage({
     const text = fillNames(message.text, names);
     return (
       <article className="msg msg-user">
-        <div className="msg-head">
-          <span className="msg-name">{persona.name}</span>
-          <span style={{ flex: 1 }} />
+        <div className="msg-head msg-head-user">
           <MessageMenu text={text} onDelete={onDelete} />
+          <span className="msg-name">{persona.name}</span>
         </div>
         <div className="bubble">
           {message.images?.length > 0 && (
@@ -197,7 +196,6 @@ function ChatMessage({
   const streaming = variant?.status === 'streaming' || variant?.status === 'pending';
   const thinking = streaming && !text && variant?.reasoning;
   const demo = variant?.meta?.provider === 'demo';
-  const canRegen = isLastChar && !message.greeting && !busy && message.variants.length < MAX_SWIPES;
 
   return (
     <article className="msg msg-char">
@@ -249,11 +247,6 @@ function ChatMessage({
 
       {isLastChar && (
         <div className="msg-actions">
-          {!message.greeting && (
-            <button type="button" className="icon-btn" onClick={onRegenerate} disabled={!canRegen} aria-label="Regenerate" title="New response">
-              <RefreshCw size={18} />
-            </button>
-          )}
           {!message.greeting && text && !streaming && (
             <>
               <button

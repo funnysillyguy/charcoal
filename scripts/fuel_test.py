@@ -8,7 +8,7 @@ async def main():
         await pg.goto('http://localhost:4175/')
         await pg.evaluate("""localStorage.setItem('charcoal:settings', JSON.stringify({apiKey:'sk-test', model:'deepseek-flash', baseUrl:'http://localhost:8787/v1', repliesPerMessage:3}))""")
         await pg.reload(); await pg.wait_for_timeout(600)
-        await pg.click('.card-main >> nth=0'); await pg.wait_for_timeout(400)
+        await pg.click('.tile-grid .tile-main >> nth=0'); await pg.wait_for_timeout(400)
         sx = lambda: pg.evaluate("(() => { const m = getComputedStyle(document.querySelector('.fuel-level')).transform; return m === 'none' ? 1 : +m.split('(')[1].split(',')[0]; })()")
         print('before', round(await sx(), 3))
         await pg.fill('textarea', 'hey'); await pg.keyboard.press('Enter')
