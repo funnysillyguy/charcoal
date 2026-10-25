@@ -306,3 +306,17 @@
 .md-table tr:last-child td {
   border-bottom: 0;
 }
+
+/* Sidebar: Create and Chat side by side */
+.sidebar-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.sidebar-actions .create-pill {
+  flex: 0 0 auto;
+}
+.chat-pill.active {
+  background: var(--raised);
+  border-color: #4a4a52;
+}

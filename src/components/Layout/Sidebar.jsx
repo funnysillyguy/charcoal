@@ -116,9 +116,19 @@ export default function Sidebar({ open, onClose, onCollapse, activeId, view }) {
           </button>
         </div>
 
-        <button type="button" className="create-pill" onClick={() => ui.openCreator()}>
-          <Plus size={20} /> Create
-        </button>
+        <div className="sidebar-actions">
+          <button type="button" className="create-pill" onClick={() => ui.openCreator()}>
+            <Plus size={20} /> Create
+          </button>
+          <button
+            type="button"
+            className={`create-pill chat-pill ${isAssistantId(activeId) ? 'active' : ''}`}
+            onClick={() => ui.openAssistant()}
+            title="Charcoal Chat: chat with DeepSeek, search the web, read your chats"
+          >
+            <MessageCircle size={19} /> Chat
+          </button>
+        </div>
 
         <nav className="sidebar-nav">
           <button type="button" className={`nav-item ${view === 'home' ? 'active' : ''}`} onClick={ui.goHome}>
@@ -126,12 +136,6 @@ export default function Sidebar({ open, onClose, onCollapse, activeId, view }) {
               <Compass size={15} />
             </span>
             Discover
-          </button>
-          <button type="button" className={`nav-item ${isAssistantId(activeId) ? 'active' : ''}`} onClick={() => ui.openAssistant()}>
-            <span className="nav-icon plain">
-              <MessageCircle size={17} />
-            </span>
-            Chat
           </button>
           <button type="button" className="nav-item" onClick={ui.openSettings}>
             <span className="nav-icon plain">
