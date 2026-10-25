@@ -4,6 +4,7 @@ import {
   Check,
   Copy,
   KeyRound,
+  MoonStar,
   MoreHorizontal,
   RefreshCw,
   RotateCcw,
@@ -16,7 +17,7 @@ import {
 import Avatar from '../Avatar.jsx';
 import SwipeController from './SwipeController.jsx';
 import { useSwipeGesture } from './useSwipeGesture.js';
-import { usePopover } from '../ui.jsx';
+import { usePopover, useUI } from '../ui.jsx';
 import { Markdown } from '../../lib/markdown.jsx';
 import { useImageUrl } from '../../lib/images.js';
 import { fillNames } from '../../lib/format.js';
@@ -99,10 +100,67 @@ function MessageMenu({ text, onDelete, onSpeak, speaking }) {
   );
 }
 
-const SETTINGS_KINDS = new Set(['auth', 'model', 'vision', 'balance', 'network']);
+const SETTINGS_KINDS = new Set(['auth', 'model', 'vision', 'balance', 'network', 'builtin']);
+
+/** Next midnight UTC (when the built-in AI allowance resets), in the viewer's own time. */
+function resetInfo() {
+  const now = new Date();
+  const reset = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+  const mins = Math.max(1, Math.round((reset - now) / 60000));
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return {
+    at: reset.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
+    left: h ? `${h}h ${m}m` : `${m}m`,
+  };
+}
+
+function LimitCard({ onSettings }) {
+  const { at, left } = resetInfo();
+  return (
+    <div className="msg-limit" role="status">
+      <span className="msg-limit-icon" aria-hidden="true">
+        <MoonStar size={20} />
+      </span>
+      <div className="msg-limit-body">
+        <strong>You’ve used today’s free AI</strong>
+        <p>
+          It refills at <b>{at}</b> (in {left}). Want to keep going now? Add your own DeepSeek key and it’s unlimited.
+        </p>
+        <div className="msg-error-actions">
+          <button type="button" className="btn btn-primary btn-sm" onClick={onSettings}>
+            <KeyRound size={13} /> Add my own key
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function ErrorCard({ error, onRetry, onSettings, busy }) {
   const [open, setOpen] = useState(false);
+  const ui = useUI();
+  if (error?.kind === 'limit') return <LimitCard onSettings={onSettings} />;
+  if (error?.kind === 'signin')
+    return (
+      <div className="msg-limit" role="status">
+        <span className="msg-limit-icon" aria-hidden="true">
+          <KeyRound size={18} />
+        </span>
+        <div className="msg-limit-body">
+          <strong>Sign in to keep chatting</strong>
+          <p>The built-in AI is free with an account. It takes 10 seconds, no email.</p>
+          <div className="msg-error-actions">
+            <button type="button" className="btn btn-primary btn-sm" onClick={ui.openAccount}>
+              Sign in
+            </button>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={onRetry} disabled={busy}>
+              <RotateCcw size={13} /> Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   return (
     <div className="msg-error" role="alert">
       <AlertTriangle size={16} />

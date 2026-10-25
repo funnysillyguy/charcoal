@@ -21,11 +21,15 @@ function hostOf(url) {
 
 async function errorFromResponse(res, { model, baseUrl }) {
   let detail = '';
+  let charcoalType = '';
   try {
     const text = await res.text();
     try {
       const json = JSON.parse(text);
       detail = json?.error?.message || json?.message || text;
+      // Charcoal's own server (built-in AI) sends friendly messages; show them as-is.
+      if (['rate_limit', 'auth', 'charcoal_error'].includes(json?.error?.type) && String(baseUrl || '').includes('/functions/v1/ai'))
+        charcoalType = json.error.type;
     } catch {
       detail = text;
     }
@@ -34,6 +38,9 @@ async function errorFromResponse(res, { model, baseUrl }) {
   }
   detail = String(detail || '').slice(0, 400);
   const s = res.status;
+  if (charcoalType === 'rate_limit') return new ApiError(detail, { status: s, kind: 'limit' });
+  if (charcoalType === 'auth') return new ApiError(detail, { status: s, kind: 'signin' });
+  if (charcoalType) return new ApiError(detail, { status: s, kind: 'builtin' });
   if (s === 401 || s === 403)
     return new ApiError('DeepSeek rejected the API key. Check it in Settings.', { status: s, kind: 'auth', detail });
   if (s === 402)
