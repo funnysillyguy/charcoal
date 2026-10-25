@@ -162,6 +162,10 @@ function Privacy() {
         </li>
         <li>Files you attach are stored on your device and sent to DeepSeek as part of your message.</li>
         <li>
+          It can change things in Charcoal for you (settings, chats, characters, your persona, signing out or deleting your
+          account), but only after you allow each action in a permission box. Account actions ask every time.
+        </li>
+        <li>
           With web search on, the searches and pages it looks up go through our server to Google News, Wikipedia and
           DuckDuckGo’s answer service (and Brave Search, if it’s enabled). Those services see the search, not who you are.
           We don’t store what you searched.

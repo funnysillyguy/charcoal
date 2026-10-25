@@ -10,13 +10,14 @@ import CanvasPanel from './components/Canvas/CanvasPanel.jsx';
 import LegalModal from './components/LegalModal.jsx';
 import { useCanvas } from './lib/canvas.js';
 import { assistantCharacter, isAssistantId, newAssistantId } from './lib/assistant.js';
+import { registerActionHost } from './lib/actions.js';
 import { useSocial } from './lib/social.js';
 import { useCloudSync } from './lib/sync.js';
 import CharacterCreator from './pages/CharacterCreator.jsx';
 import CharacterProfileModal from './components/CharacterProfileModal.jsx';
 import { RefuelOverlay } from './components/Fuel.jsx';
 import { UIContext, useToasts, ToastStack } from './components/ui.jsx';
-import { StoreProvider, useStore } from './lib/store.jsx';
+import { StoreProvider, useSettings, useStore } from './lib/store.jsx';
 
 function Shell() {
   const { state, dispatch, getState } = useStore();
@@ -130,6 +131,10 @@ function Shell() {
     }),
     [goHome, openChat, push, dispatch, getState],
   );
+
+  // Charcoal Chat's actions run through here (each one only after the user allows it).
+  const { updateSettings } = useSettings();
+  useEffect(() => registerActionHost({ dispatch, getState, updateSettings, ui }), [dispatch, getState, updateSettings, ui]);
 
   if (!state.hydrated) {
     return (

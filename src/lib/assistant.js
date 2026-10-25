@@ -11,6 +11,7 @@ import { wantsCode } from './canvas.js';
 import { getFileText } from './files.js';
 import { CLOUD_KEY, CLOUD_URL, accessToken, getSession } from './cloud.js';
 import { consume } from './fuel.js';
+import { FIND_CHARACTER, actionTools, actionsAvailable, findCharacter, isAction, performAction, runAfterReply } from './actions.js';
 
 export const ASST_PREFIX = 'asst:';
 export const isAssistantId = (id) => typeof id === 'string' && id.startsWith(ASST_PREFIX);
@@ -220,6 +221,8 @@ const WEB_TOOLS = [
 export function describeTool(name, args = {}, result) {
   const n = result && !result.error ? result : null;
   switch (name) {
+    case 'find_character':
+      return { icon: 'search', text: `Looked up “${String(args.query || '').slice(0, 40)}”`, detail: n ? `${n.results?.length || 0} found` : '' };
     case 'list_chats':
       return { icon: 'list', text: 'Looked over your chats', detail: n ? `${n.chats?.length || 0} chat${n.chats?.length === 1 ? '' : 's'}` : '' };
     case 'search_chats':
@@ -244,7 +247,7 @@ export function describeTool(name, args = {}, result) {
 
 /* ---------- the request ---------- */
 
-function systemPrompt({ persona, web, webBlocked, code }) {
+function systemPrompt({ persona, web, webBlocked, code, actions }) {
   const now = new Date();
   const lines = [
     `You are ${ASSISTANT_NAME}, the built-in assistant in Charcoal, an AI character chat app. You run on DeepSeek.`,
@@ -264,6 +267,15 @@ function systemPrompt({ persona, web, webBlocked, code }) {
         ? 'Web search needs a Charcoal account. If the user asks for current information, say your knowledge may be out of date and that signing in turns on web search.'
         : 'Web search is turned off for this chat. If the user asks for current information, say your knowledge may be out of date and that they can turn on web search with the globe button in the message bar.',
     '',
+    ...(actions
+      ? [
+          '# Doing things in Charcoal',
+          'You can act in the app for the user with action tools: change settings, delete or reset chats, clear chats, create a character, open a character’s chat, update their persona, set a chat’s mood, and (when signed in) sign out or delete their account. Use find_character to look up character ids and list_chats for chat ids.',
+          'Every action shows the user a permission box and only runs if they allow it, so when they clearly ask for something, call the tool right away instead of asking "are you sure?" in text. If a request is ambiguous, ask first: "reset my account" could mean clearing chats, signing out and clearing the device, or permanently deleting the account, so explain the options briefly and let them pick. Afterwards, say plainly what happened. If they say no, accept it and don’t retry.',
+          'You can’t change passwords, see recovery codes, or touch anything outside Charcoal. Say so if asked.',
+          '',
+        ]
+      : []),
     '# Files and images',
     'Files the user attaches appear in their message inside <file> tags. Data files are also available to Python at data/<filename>, so analysis code can open them directly (for example pd.read_csv("data/sales.csv")).',
   ];
@@ -308,11 +320,13 @@ export async function buildAssistantMessages({ chat, uptoIndex, persona, setting
   const msgs = await withFiles(chat.messages.slice(0, uptoIndex));
   const history = await buildHistory({ messages: msgs, uptoIndex: msgs.length, names, budget: 600_000 });
   const web = opts.web && signedIn;
+  const actions = actionsAvailable();
   return {
     opts,
     code,
     web,
-    messages: [{ role: 'system', content: systemPrompt({ persona, web, webBlocked: opts.web && !signedIn, code }) }, ...history],
+    actions,
+    messages: [{ role: 'system', content: systemPrompt({ persona, web, webBlocked: opts.web && !signedIn, code, actions }) }, ...history],
   };
 }
 
@@ -320,11 +334,19 @@ export async function buildAssistantMessages({ chat, uptoIndex, persona, setting
  * Stream one Charcoal Chat reply, running tools in between. Yields the same events as streamChat plus
  * { type: 'activity', activity } for each tool step, so the chat can show what it looked at.
  */
-export async function* assistantStream({ ep, chat, messageId, persona, settings, getState, selfId, signal }) {
+export async function* assistantStream(args) {
+  try {
+    yield* assistantLoop(args);
+  } finally {
+    runAfterReply(); // navigation / sign-out the user approved during this reply
+  }
+}
+
+async function* assistantLoop({ ep, chat, messageId, variantId, persona, settings, getState, selfId, signal }) {
   const index = chat.messages.findIndex((m) => m.id === messageId);
-  const { opts, code, web, messages } = await buildAssistantMessages({ chat, uptoIndex: index, persona, settings });
-  const tools = [...CHAT_TOOLS, ...(web ? WEB_TOOLS : [])];
-  const impl = { ...CHAT_TOOL_IMPL, ...(web ? WEB_TOOL_IMPL : {}) };
+  const { opts, code, web, actions, messages } = await buildAssistantMessages({ chat, uptoIndex: index, persona, settings });
+  const tools = [...CHAT_TOOLS, ...(web ? WEB_TOOLS : []), ...(actions ? [FIND_CHARACTER, ...actionTools()] : [])];
+  const impl = { ...CHAT_TOOL_IMPL, ...(web ? WEB_TOOL_IMPL : {}), ...(actions ? { find_character: findCharacter } : {}) };
   const convo = [...messages];
   let wrote = false;
   for (let round = 0; round < 8; round++) {
@@ -383,6 +405,20 @@ export async function* assistantStream({ ep, chat, messageId, persona, settings,
         args = {};
       }
       const name = tc.function.name;
+      if (actions && isAction(name)) {
+        // App actions stop at a permission box in the chat; nothing runs until the user allows it.
+        yield { type: 'activity', activity: { id: tc.id, name, status: 'running', icon: 'shield', text: 'Waiting for your OK', detail: '' } };
+        const r = await performAction(name, args, { selfId, variantId, signal });
+        yield { type: 'activity', activity: { id: tc.id, name, status: r.status, icon: 'shield', text: r.label, detail: '' } };
+        if (r.terminal) {
+          // Nothing more can be asked of the model after this action (e.g. the account is gone): finish here.
+          yield { type: 'content', text: (wrote ? '\n\n' : '') + r.terminal };
+          yield { type: 'finish', reason: 'stop' };
+          return;
+        }
+        convo.push({ role: 'tool', tool_call_id: tc.id, content: JSON.stringify(r.result).slice(0, 20_000) });
+        continue;
+      }
       yield { type: 'activity', activity: { id: tc.id, name, status: 'running', ...describeTool(name, args) } };
       let result;
       try {

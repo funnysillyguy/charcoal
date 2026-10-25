@@ -22,7 +22,10 @@ import {
   Loader,
   ExternalLink,
   FileText,
+  ShieldCheck,
+  ShieldAlert,
 } from '../icons.jsx';
+import { usePendingApproval } from '../../lib/actions.js';
 import Avatar from '../Avatar.jsx';
 import SwipeController from './SwipeController.jsx';
 import { useSwipeGesture } from './useSwipeGesture.js';
@@ -71,7 +74,59 @@ function TypedReply({ text, live, cps }) {
   return <Markdown text={cutProse(text, shown)} streaming={live || shown < total} />;
 }
 
-const ACT_ICONS = { list: ListBullets, search: Search, book: BookOpen, globe: Globe, link: LinkSimple };
+const ACT_ICONS = { list: ListBullets, search: Search, book: BookOpen, globe: Globe, link: LinkSimple, shield: ShieldCheck };
+
+/** Charcoal Chat asking before it acts: Yes / Yes for this chat / No. Keys 1-3 work too, Esc says no. */
+function PermissionBox({ variantId }) {
+  const req = usePendingApproval(variantId);
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!req) return undefined;
+    ref.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    const opts = ['once', ...(req.canAlways ? ['always'] : []), 'deny'];
+    const onKey = (e) => {
+      const el = document.activeElement;
+      const typing = el && /^(INPUT|TEXTAREA)$/.test(el.tagName) && el.value;
+      if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
+      const n = Number(e.key);
+      if (n >= 1 && n <= opts.length) {
+        e.preventDefault();
+        req.answer(opts[n - 1]);
+      } else if (e.key === 'Escape') req.answer('deny');
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [req]);
+  if (!req) return null;
+  const options = [
+    ['once', 'Yes'],
+    ...(req.canAlways ? [['always', 'Yes, and don’t ask again for this in this chat']] : []),
+    ['deny', 'No'],
+  ];
+  const Icon = req.risk === 'high' ? ShieldAlert : ShieldCheck;
+  return (
+    <div ref={ref} className={`perm ${req.risk === 'high' ? 'high' : ''}`} role="alertdialog" aria-label="Permission needed">
+      <div className="perm-head">
+        <Icon size={18} />
+        <div className="perm-text">
+          <strong>Allow Charcoal to {req.title.charAt(0).toLowerCase() + req.title.slice(1)}?</strong>
+          {req.lines.map((l, i) => (
+            <p key={i}>{l}</p>
+          ))}
+          {req.warn && <p className="perm-warn">{req.warn}</p>}
+        </div>
+      </div>
+      <div className="perm-opts">
+        {options.map(([v, label], i) => (
+          <button key={v} type="button" className={`perm-opt ${v}`} onClick={() => req.answer(v)}>
+            <kbd>{i + 1}</kbd>
+            {label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 /** What Charcoal Chat looked at while answering: your chats, web searches, pages. */
 function ActivityList({ items }) {
@@ -321,6 +376,7 @@ function ChatMessage({
   const draftLive = draft?.status === 'pending' || draft?.status === 'streaming';
   const draftId = draft?.id;
   const draftText = draft?.text || '';
+  const awaitingOk = !!usePendingApproval(draftId);
   const blockCtx = useMemo(
     () => (canvasOn && draftId ? { charId: character.id, messageId: message.id, variantId: draftId, streaming: draftLive } : null),
     [canvasOn, draftId, draftLive, character.id, message.id],
@@ -406,14 +462,18 @@ function ChatMessage({
         ) : pending ? (
           <>
             <ActivityList items={variant?.activity} />
-            <div className="msg-pending">
-              <TypingDots />
-              {thinking && <span className="msg-thinking">thinking…</span>}
-            </div>
+            <PermissionBox variantId={variant?.id} />
+            {!awaitingOk && (
+              <div className="msg-pending">
+                <TypingDots />
+                {thinking && <span className="msg-thinking">thinking…</span>}
+              </div>
+            )}
           </>
         ) : (
           <BlockContext.Provider value={blockCtx}>
             <ActivityList items={variant?.activity} />
+            <PermissionBox variantId={variant?.id} />
             {typewriter ? (
               <TypedReply
                 key={variant?.id}

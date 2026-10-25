@@ -19,7 +19,7 @@ import { assistantStream, buildAssistantMessages } from './assistant.js';
  */
 export async function* generateReply({ character, persona, chat, messageId, variantId, kind, settings, signal, getState }) {
   if (character?.kind === 'assistant') {
-    yield* assistantReply({ character, persona, chat, messageId, settings, signal, getState });
+    yield* assistantReply({ character, persona, chat, messageId, variantId, settings, signal, getState });
     return;
   }
   const index = chat.messages.findIndex((m) => m.id === messageId);
@@ -81,7 +81,7 @@ export async function* generateReply({ character, persona, chat, messageId, vari
 }
 
 /** Charcoal Chat: DeepSeek with tools (your chats, the web). Offline and hosted-preview fallbacks keep it usable. */
-async function* assistantReply({ character, persona, chat, messageId, settings, signal, getState }) {
+async function* assistantReply({ character, persona, chat, messageId, variantId, settings, signal, getState }) {
   const index = chat.messages.findIndex((m) => m.id === messageId);
   const sample = SANDBOXED ? await getSample() : null;
   if (sample) {
@@ -102,5 +102,5 @@ async function* assistantReply({ character, persona, chat, messageId, settings, 
     return;
   }
   yield { type: 'meta', meta: { provider: ep.shared ? 'shared' : 'deepseek', model: ep.model } };
-  yield* assistantStream({ ep, chat, messageId, persona, settings: { ...settings, model: ep.model }, getState, selfId: character.id, signal });
+  yield* assistantStream({ ep, chat, messageId, variantId, persona, settings: { ...settings, model: ep.model }, getState, selfId: character.id, signal });
 }
