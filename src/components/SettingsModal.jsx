@@ -213,28 +213,10 @@ export default function SettingsModal({ open, onClose, onSaved }) {
             </p>
           ) : shared.enabled ? (
             <>
-              <p>{settings.apiKey ? 'Available, but your own key below takes priority.' : 'You’re on the built-in AI (DeepSeek Flash). Nothing to set up.'}</p>
-              {shared.owner && settings.apiKey && settings.apiKey.trim().slice(-4) === shared.keyTail && (
-                <div className="builtin-same">
-                  <p>
-                    The key saved below is the same one everyone uses, so your chats go straight to DeepSeek and skip the
-                    meter. Switch to the built-in AI and yours count toward the daily limit like everyone else’s. Your key
-                    stays on for everyone.
-                  </p>
-                  <button
-                    type="button"
-                    className="btn btn-primary btn-sm"
-                    onClick={() => {
-                      set({ apiKey: '' });
-                      updateSettings({ apiKey: '', lastCheck: null });
-                      setResult(null);
-                      setTimeout(refreshShared, 400);
-                      ui.toast('Done. Your chats now go through the built-in AI and count toward the limit.', 'ok');
-                    }}
-                  >
-                    Count my chats too
-                  </button>
-                </div>
+              {shared.owner && settings.apiKey && settings.apiKey.trim().slice(-4) === shared.keyTail ? (
+                <p>Your saved key is the one everyone uses, so your chats go through the built-in AI too and count toward the daily limit like everyone else’s.</p>
+              ) : (
+                <p>{settings.apiKey ? 'Available, but your own key below takes priority.' : 'You’re on the built-in AI (DeepSeek Flash). Nothing to set up.'}</p>
               )}
               <PoweredBy />
               {limit > 0 && (

@@ -51,7 +51,7 @@ export function estimateTokens(text) {
 
 /** Drain the tank. Negative values correct an earlier estimate. */
 export function consume(tokens) {
-  if (!tokens || state.refuelStartedAt) return;
+  if (!tokens || state.refuelStartedAt) return; // nothing to charge or refund during a break
   const used = Math.max(0, state.used + tokens);
   commit({ ...state, used, refuelStartedAt: used >= state.capacity ? Date.now() : null });
 }

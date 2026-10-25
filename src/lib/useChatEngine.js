@@ -8,6 +8,8 @@ import { MAX_SWIPES } from './settings.js';
 import { consume, isRefueling, CODE_COST } from './fuel.js';
 import { recordChatStart } from './counts.js';
 import { isAssistantId } from './assistant.js';
+import { wantsCode } from './canvas.js';
+import { refreshShared } from './endpoint.js';
 import { saveFileText } from './files.js';
 
 const FLUSH_MS = 40; // batch token appends so long replies don't re-render per token
@@ -35,7 +37,12 @@ export function useChatEngine(character) {
   /** Stream one draft into its variant slot. Resolves when that draft finishes, fails or is stopped. */
   const runOne = useCallback(
     async ({ messageId, variantId, kind, signal }) => {
-      consume(1); // one per draft: 3 parallel drafts = 3, every swipe/regeneration/retry = 1. Break every 100.
+      // One per draft (3 parallel drafts = 3, every swipe/regeneration/retry = 1). A coding request costs 3
+      // up front; it's settled at the end by whether the reply really has code. Break every 100.
+      const chatNow = getState().chats[charId];
+      const at = chatNow?.messages.findIndex((m) => m.id === messageId) ?? -1;
+      const codeAsked = live.current.settings.canvas !== false && at > 0 && wantsCode(chatNow.messages, at);
+      consume(codeAsked ? CODE_COST : 1);
       let content = '';
       let reasoning = '';
       let timer = null;
@@ -83,8 +90,11 @@ export function useChatEngine(character) {
         void reported;
         const msg = getState().chats[charId]?.messages.find((m) => m.id === messageId);
         const text = msg?.variants.find((v) => v.id === variantId)?.text || '';
-        // A reply with code costs 3 toward the break (1 already taken at the start).
-        if (text.includes('```')) consume(CODE_COST - 1);
+        // Settle the code cost: code that wasn't predicted pays the difference; a predicted one that wrote no code gets it back.
+        const hasCode = text.includes('```');
+        if (hasCode && !codeAsked) consume(CODE_COST - 1);
+        else if (!hasCode && codeAsked) consume(-(CODE_COST - 1));
+        if (msg?.variants.find((v) => v.id === variantId)?.meta?.provider === 'shared') refreshShared(); // keep the daily meter current
         if (text.trim()) {
           dispatch({ type: 'msg/finish', charId, messageId, variantId, status: 'done', finishReason });
         } else {

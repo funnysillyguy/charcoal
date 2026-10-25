@@ -7,9 +7,17 @@ import { CLOUD_ENABLED, CLOUD_KEY, CLOUD_URL, accessToken, getSession, useSessio
 export const SHARED_BASE = `${CLOUD_URL}/functions/v1/ai`;
 export const SHARED_MODEL = 'deepseek-flash';
 
+/** The owner saved the same key they share with everyone: route it through the server so it's metered too. */
+async function ownKeyIsTheSharedKey(own, settings) {
+  if (!own || !CLOUD_ENABLED || !getSession() || (settings.baseUrl || '').trim()) return false;
+  if (status.owner === undefined) await refreshShared();
+  return !!(status.owner && status.enabled && status.keyTail && own.trim().slice(-4) === status.keyTail);
+}
+
 export async function resolveEndpoint(settings) {
   const own = effectiveKey(settings);
-  if (own) return { baseUrl: effectiveBaseUrl(settings), apiKey: own, headers: {}, shared: false, model: settings.model };
+  if (own && !(await ownKeyIsTheSharedKey(own, settings)))
+    return { baseUrl: effectiveBaseUrl(settings), apiKey: own, headers: {}, shared: false, model: settings.model };
   if (CLOUD_ENABLED && getSession()) {
     try {
       const token = await accessToken();
