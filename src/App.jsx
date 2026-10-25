@@ -11,6 +11,7 @@ import LegalModal from './components/LegalModal.jsx';
 import { useCanvas } from './lib/canvas.js';
 import { assistantCharacter, isAssistantId, newAssistantId } from './lib/assistant.js';
 import { registerActionHost } from './lib/actions.js';
+import { useUpdateAvailable } from './lib/update.js';
 import { useSocial } from './lib/social.js';
 import { useCloudSync } from './lib/sync.js';
 import CharacterCreator from './pages/CharacterCreator.jsx';
@@ -36,6 +37,8 @@ function Shell() {
   const { toasts, push } = useToasts();
 
   const [collapsed, setCollapsed] = useState(false);
+  const updateReady = useUpdateAvailable();
+  const [updateHidden, setUpdateHidden] = useState(false);
 
   // The Canvas needs the room: fold the sidebar away while it's open on laptop-size screens,
   // and put it back the way it was when the Canvas closes.
@@ -179,6 +182,17 @@ function Shell() {
         </div>
       )}
       <LegalModal page={legal} onChange={setLegal} onClose={() => setLegal(null)} />
+      {updateReady && !updateHidden && (
+        <div className="update-bar" role="status">
+          <span>Charcoal was updated.</span>
+          <button type="button" className="btn btn-primary btn-sm" onClick={() => window.location.reload()}>
+            Refresh
+          </button>
+          <button type="button" className="update-later" onClick={() => setUpdateHidden(true)} aria-label="Later">
+            Later
+          </button>
+        </div>
+      )}
       <OwnKeyGuide open={guideOpen} onClose={() => setGuideOpen(false)} onOpenSettings={() => setSettingsOpen(true)} />
       <ToastStack toasts={toasts} />
     </UIContext.Provider>
