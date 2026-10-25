@@ -9,6 +9,7 @@ import './styles/modals.css';
 import './styles/layout.css';
 import './styles/motion.css';
 import './styles/discover.css';
+import './styles/flat.css';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

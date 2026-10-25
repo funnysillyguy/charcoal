@@ -9,7 +9,6 @@ import { useSettings } from '../lib/store.jsx';
 import { prepareImage, imageFilesFrom, loadImage, cropRect, cropSquare, boxToCrop, uid } from '../lib/images.js';
 import { snapCircle } from '../lib/snap.js';
 import { readScreenshots, PORT_MAX_SHOTS } from '../lib/assist.js';
-import { consume, estimateTokens } from '../lib/fuel.js';
 import { fillNames } from '../lib/format.js';
 import '../styles/port.css';
 
@@ -171,7 +170,6 @@ export default function ScreenshotPort({ onApply, onClose }) {
     setError('');
     try {
       const r = await readScreenshots({ settings, shots: shots.map((s) => s.dataUrl), signal: ctl.signal });
-      consume(estimateTokens([r.description, r.greeting, r.personality, ...Object.values(r.improved)].join(' ')) + 150);
       setResult(r);
       setUseImproved(Object.keys(r.improved).length > 0);
       if (r.avatar) {

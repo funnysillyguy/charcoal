@@ -39,7 +39,6 @@ const ChatInput = forwardRef(function ChatInput({ character, busy, onSend, onSto
     setHelper((h) => ({ ...(h || {}), loading: true, error: '', improving }));
     try {
       const res = await suggestReplies({ settings, character, persona, chat, draft: text, signal: ctl.signal });
-      if (!res.offline) consume(estimateTokens(res.options.map((o) => o.text).join(' ')) + 30);
       setHelper({ loading: false, options: res.options, improving, offline: !!res.offline });
     } catch (e) {
       if (e?.name === 'AbortError') return;

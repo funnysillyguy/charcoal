@@ -1,13 +1,13 @@
-// Fuel tank: a cap on generated output tokens. Every draft drains it (parallel swipes included).
-// When it runs dry, chat pauses for a short refuel (25 s), then the tank is full again.
+// Fuel tank: every reply the AI writes uses one (parallel drafts, swipes and regenerations included).
+// After 100 replies, chat pauses for a 25-second break, then the tank is full again.
 // Stored per browser so a reload mid-refuel keeps counting down.
 import { useSyncExternalStore } from 'react';
 import { local } from './storage.js';
 
 const KEY = 'charcoal:fuel';
-export const DEFAULT_CAPACITY = 2_000;
+export const DEFAULT_CAPACITY = 100; // replies
 export const REFUEL_MS = 25_000;
-const VERSION = 2; // bump when the defaults change so old saved tanks reset to them
+const VERSION = 3; // bump when the defaults change so old saved tanks reset to them
 
 let state = normalize(local.get(KEY, null));
 const listeners = new Set();
@@ -18,7 +18,7 @@ function normalize(s) {
   return {
     v: VERSION,
     used: Math.max(0, Number(s?.used) || 0),
-    capacity: Math.max(1000, Number(s?.capacity) || DEFAULT_CAPACITY),
+    capacity: Math.max(1, Number(s?.capacity) || DEFAULT_CAPACITY),
     refuelStartedAt: s?.refuelStartedAt || null,
   };
 }
@@ -61,7 +61,7 @@ export function isRefueling() {
 }
 
 export function setCapacity(capacity) {
-  const cap = Math.max(1000, Math.round(Number(capacity) || DEFAULT_CAPACITY));
+  const cap = Math.max(1, Math.round(Number(capacity) || DEFAULT_CAPACITY));
   commit({ ...state, capacity: cap, refuelStartedAt: state.used >= cap ? state.refuelStartedAt || Date.now() : null });
 }
 

@@ -34,7 +34,6 @@ import { dataUrlToBlob } from '../lib/hostAI.js';
 import { draftCharacter } from '../lib/assist.js';
 import { readCardFile } from '../lib/cards.js';
 import { fillNames, formatCount } from '../lib/format.js';
-import { consume, estimateTokens } from '../lib/fuel.js';
 
 const LIMITS = { name: 40, tagline: 300, description: 1500, greeting: 4096, persona: 8000, mood: 120, examples: 4000 };
 const MAX_GREETINGS = 5;
@@ -160,7 +159,6 @@ function StudioHelper({ onApply }) {
     setError('');
     try {
       const r = await draftCharacter({ settings, idea, imageDataUrl: ref?.dataUrl, signal: ctl.signal });
-      if (!r.offline) consume(estimateTokens([r.greeting, r.persona, r.examples, r.description].join(' ')) + 80);
       setResult(r);
       setChosen(0);
     } catch (e) {

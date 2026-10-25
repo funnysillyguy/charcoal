@@ -5,7 +5,7 @@ import { generateReply } from './generate.js';
 import { uid, saveImage } from './images.js';
 import { ApiError } from './deepseek.js';
 import { MAX_SWIPES } from './settings.js';
-import { consume, estimateTokens, isRefueling } from './fuel.js';
+import { consume, isRefueling } from './fuel.js';
 
 const FLUSH_MS = 40; // batch token appends so long replies don't re-render per token
 
@@ -32,19 +32,15 @@ export function useChatEngine(character) {
   /** Stream one draft into its variant slot. Resolves when that draft finishes, fails or is stopped. */
   const runOne = useCallback(
     async ({ messageId, variantId, kind, signal }) => {
+      consume(1); // the break comes every 100 replies (swipes and regenerations count)
       let content = '';
       let reasoning = '';
       let timer = null;
       let finishReason = null;
-      let estimated = 0;
       let reported = null;
       const flush = () => {
         timer = null;
         if (!content && !reasoning) return;
-        // Fuel counts the visible reply only; thinking tokens don't drain the tank.
-        const est = estimateTokens(content);
-        estimated += est;
-        consume(est);
         dispatch({ type: 'msg/append', charId, messageId, variantId, content, reasoning });
         content = '';
         reasoning = '';

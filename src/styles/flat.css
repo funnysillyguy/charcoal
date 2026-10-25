@@ -1,0 +1,122 @@
+/* Flat, professional finish: solid surfaces, no decorative gradients, glows or color washes.
+   Loaded last so it settles every earlier style. Functional fades (skeleton shimmer, composer fade) stay. */
+:root {
+  --glow: 0 0 0 1px rgba(250, 250, 250, 0.16);
+  --font-display: var(--font-ui);
+}
+
+/* Brand mark: solid tile, solid ember stroke */
+.logo-mark {
+  background: #27272a;
+  box-shadow: inset 0 0 0 1px #34343b;
+}
+.logo-mark::after {
+  background: #f2a25c;
+  box-shadow: none;
+  animation: none !important;
+}
+
+/* Character art: one solid color per character, emblem in its accent color */
+.avatar-gen,
+.cover-gen {
+  background: color-mix(in srgb, var(--av-base) 78%, #18181b);
+  box-shadow: none;
+}
+.avatar-gen svg,
+.cover-emblem-main {
+  filter: none;
+}
+.cover-gen::after,
+.cover-emblem-ghost {
+  display: none;
+}
+.avatar-glow {
+  box-shadow: none;
+}
+.avatar-portrait .portrait {
+  filter: none;
+}
+
+/* Discover */
+.hero {
+  background: var(--raised);
+  box-shadow: none;
+}
+.hero-bg,
+.hero::after {
+  display: none;
+}
+.hero-art {
+  box-shadow: none;
+}
+.hero-art:hover {
+  transform: none;
+}
+.hero-eyebrow {
+  color: var(--text-3);
+  letter-spacing: 0.08em;
+}
+.hero-name {
+  font-weight: 700;
+  font-size: clamp(1.8rem, 1.4rem + 1.4vw, 2.5rem);
+  letter-spacing: -0.03em;
+}
+.hero-line {
+  font-style: normal;
+  color: var(--text-2);
+}
+.tile-art::after {
+  display: none;
+}
+.tile-stat {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(10, 10, 12, 0.66);
+  text-shadow: none;
+}
+.page.chat::before {
+  display: none;
+}
+
+/* Notices and cards: neutral surfaces instead of tinted washes */
+.limit-banner,
+.msg-limit {
+  background: var(--raised);
+  border: 1px solid var(--line-strong);
+}
+.msg-limit-icon {
+  background: var(--raised-2);
+  color: var(--text);
+}
+.powered-by {
+  background: var(--raised-2);
+  border: 1px solid var(--line);
+}
+.thank-btn.done {
+  background: var(--raised-2);
+  color: var(--text-2);
+}
+.account-avatar {
+  background: var(--raised-2);
+}
+.btn-glow:hover:not(:disabled) {
+  box-shadow: var(--glow);
+}
+.notif-icon.thanks {
+  background: var(--raised-2);
+}
+
+/* Break screen: solid backdrop, no glow */
+.brk {
+  background: #141417;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.brk-progress {
+  filter: none;
+}
+.brk-text h2 {
+  font-weight: 700;
+  font-size: 1.9rem;
+  letter-spacing: -0.03em;
+}
