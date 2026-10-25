@@ -154,10 +154,17 @@
   display: flex;
   align-items: flex-start;
   font-family: var(--font-mono);
-  font-size: 0.78rem;
-  line-height: 1.6;
+  font-size: 12.5px;
+  line-height: 20px; /* fixed px so line numbers and code lines stay on the same rows */
+  -webkit-text-size-adjust: 100%; /* stop iOS Safari from inflating long code lines */
+  text-size-adjust: 100%;
   overscroll-behavior: contain;
   tab-size: 2;
+}
+.cv-gutter,
+.cv-src {
+  font: inherit;
+  line-height: inherit;
 }
 .cv-gutter {
   position: sticky;
@@ -346,6 +353,7 @@
 }
 .run-block pre {
   white-space: pre;
+  -webkit-text-size-adjust: 100%;
 }
 .run-block pre code {
   font: inherit;
@@ -431,6 +439,16 @@
   }
   .cv-pane-code {
     border-right: 0;
+  }
+  .cv-code {
+    font-size: 11.5px;
+    line-height: 18px;
+  }
+  .cv-gutter {
+    padding: 10px 8px 10px 10px;
+  }
+  .cv-src {
+    padding: 10px 14px 40px 4px;
   }
   .cv-foot {
     padding-bottom: calc(7px + env(safe-area-inset-bottom, 0px));
