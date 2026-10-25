@@ -29,7 +29,7 @@ import {
   Timer,
   WandSparkles,
   Waves,
-} from 'lucide-react';
+} from './icons.jsx';
 
 export const EMBLEMS = {
   Moon,

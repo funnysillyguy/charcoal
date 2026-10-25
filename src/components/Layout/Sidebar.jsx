@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ChevronsLeft, Cloud, Compass, Megaphone, MessageSquareDashed, MoreHorizontal, Plus, Search, Settings, Trash2, UserRound, X } from 'lucide-react';
+import { ChevronsLeft, Cloud, Compass, Megaphone, MessageSquareDashed, MoreHorizontal, Plus, Search, Settings, Trash2, UserRound, X } from '../icons.jsx';
 import { CLOUD_ENABLED, useSession } from '../../lib/cloud.js';
 import { useSyncStatus } from '../../lib/sync.js';
 import { useSocial, badgeText } from '../../lib/social.js';
@@ -199,6 +199,14 @@ export default function Sidebar({ open, onClose, onCollapse, activeId, view }) {
           )}
         </div>
 
+        <nav className="legal-links" aria-label="Legal">
+          <button type="button" onClick={() => ui.openLegal('terms')}>
+            Terms
+          </button>
+          <button type="button" onClick={() => ui.openLegal('privacy')}>
+            Privacy
+          </button>
+        </nav>
         <div className="sidebar-foot">
           <PersonaPicker variant="row" />
         </div>

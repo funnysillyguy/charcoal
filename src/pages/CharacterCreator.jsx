@@ -19,7 +19,7 @@ import {
   Upload,
   Wand2,
   X,
-} from 'lucide-react';
+} from '../components/icons.jsx';
 import Avatar from '../components/Avatar.jsx';
 import HelpWriteIcon from '../components/HelpWriteIcon.jsx';
 import ScreenshotPort from '../components/ScreenshotPort.jsx';

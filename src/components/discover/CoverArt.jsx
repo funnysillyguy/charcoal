@@ -1,7 +1,17 @@
-// Full-bleed character art for big tiles and the hero. Uploaded images fill the frame;
-// generated portraits sit on their lit gradient; emblem characters get a poster treatment.
-import { EMBLEMS } from '../emblems.js';
+// Full-bleed character art for big tiles, the hero and profiles. Uploaded images fill the frame,
+// drawn portraits sit on their color, and everyone else gets a type-set cover: the character's
+// name in a book-jacket serif on their own color, with their genre above it.
 import Portrait from '../Portrait.jsx';
+
+/** Size the name so its longest word fits the width (in container-width units). */
+export function coverNameSize(name) {
+  const words = String(name || '?').split(/\s+/).filter(Boolean);
+  const longest = Math.max(4, ...words.map((w) => w.length));
+  const lines = words.length;
+  const byWidth = 84 / (longest * 0.56);
+  const byLines = lines >= 4 ? 13 : lines === 3 ? 15 : 19;
+  return Math.max(9, Math.min(byWidth, byLines));
+}
 
 export default function CoverArt({ character, className = '' }) {
   const a = character?.avatar || {};
@@ -21,24 +31,16 @@ export default function CoverArt({ character, className = '' }) {
       </div>
     );
   }
-  const Icon = EMBLEMS[a.emblem];
-  const initials = (character?.name || '?')
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase();
+  const name = character?.name || 'Untitled';
+  const label = character?.tags?.[0] || character?.category || '';
   return (
-    <div className={`cover cover-gen cover-emblem ${className}`} style={style} aria-hidden="true">
-      {Icon ? (
-        <>
-          <Icon className="cover-emblem-ghost" strokeWidth={0.6} />
-          <Icon className="cover-emblem-main" strokeWidth={1.3} />
-        </>
-      ) : (
-        <span className="cover-initials">{initials}</span>
-      )}
+    <div className={`cover cover-gen cover-type ${className}`} style={style} aria-hidden="true">
+      <div className="cover-type-in">
+        {label && <span className="cover-type-label">{label}</span>}
+        <span className="cover-type-name" style={{ fontSize: `${coverNameSize(name)}cqw` }}>
+          {name}
+        </span>
+      </div>
     </div>
   );
 }

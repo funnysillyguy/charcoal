@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, ChevronDown, Plus, Trash2 } from 'lucide-react';
+import { Check, ChevronDown, Plus, Trash2 } from '../icons.jsx';
 import { usePopover } from '../ui.jsx';
 import { useStore, useActivePersona } from '../../lib/store.jsx';
 import { uid } from '../../lib/images.js';

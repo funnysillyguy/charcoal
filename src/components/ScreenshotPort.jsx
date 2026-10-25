@@ -2,7 +2,7 @@
 // The AI transcribes exactly (bold/italics kept as Markdown), optionally offers a light rewrite,
 // and finds the avatar; we snap the crop to the real circle edge when the avatar is round.
 import { useEffect, useRef, useState } from 'react';
-import { Check, ImagePlus, Loader, Magnet, ScanText, Sparkles, X } from 'lucide-react';
+import { Check, ImagePlus, Loader, Magnet, ScanText, Sparkles, X } from './icons.jsx';
 import { useUI } from './ui.jsx';
 import { Markdown } from '../lib/markdown.jsx';
 import { useSettings } from '../lib/store.jsx';

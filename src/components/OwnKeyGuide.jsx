@@ -1,6 +1,6 @@
 // "Add your own key" walkthrough: a cursor-following screen recording plus the steps in writing.
 import { useRef, useState } from 'react';
-import { ExternalLink, KeyRound, Volume2, VolumeX } from 'lucide-react';
+import { ExternalLink, KeyRound, Volume2, VolumeX } from './icons.jsx';
 import { Modal } from './ui.jsx';
 
 const VIDEO = `${import.meta.env.BASE_URL || './'}guide-own-key.mp4`;

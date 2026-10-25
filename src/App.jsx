@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Sidebar from './components/Layout/Sidebar.jsx';
 import Home from './pages/Home.jsx';
 import ChatWindow from './components/Chat/ChatWindow.jsx';
@@ -6,6 +6,9 @@ import SettingsModal from './components/SettingsModal.jsx';
 import AccountModal from './components/AccountModal.jsx';
 import OwnKeyGuide from './components/OwnKeyGuide.jsx';
 import NotificationsPanel from './components/NotificationsPanel.jsx';
+import CanvasPanel from './components/Canvas/CanvasPanel.jsx';
+import LegalModal from './components/LegalModal.jsx';
+import { useCanvas } from './lib/canvas.js';
 import { useSocial } from './lib/social.js';
 import { useCloudSync } from './lib/sync.js';
 import CharacterCreator from './pages/CharacterCreator.jsx';
@@ -22,6 +25,7 @@ function Shell() {
   const [accountOpen, setAccountOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [legal, setLegal] = useState(null); // 'terms' | 'privacy' | null
   const [notice, setNotice] = useState(null); // top banner: { id, text }
   useSocial();
   useCloudSync();
@@ -30,6 +34,22 @@ function Shell() {
   const { toasts, push } = useToasts();
 
   const [collapsed, setCollapsed] = useState(false);
+
+  // The Canvas needs the room: fold the sidebar away while it's open on laptop-size screens,
+  // and put it back the way it was when the Canvas closes.
+  const canvasOpen = useCanvas().open;
+  const beforeCanvas = useRef(null);
+  useEffect(() => {
+    if (canvasOpen) {
+      if (beforeCanvas.current === null && window.matchMedia?.('(min-width: 901px) and (max-width: 1700px)').matches) {
+        beforeCanvas.current = collapsed;
+        setCollapsed(true);
+      }
+    } else if (beforeCanvas.current !== null) {
+      setCollapsed(beforeCanvas.current);
+      beforeCanvas.current = null;
+    }
+  }, [canvasOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const goHome = useCallback(() => {
     setView({ name: 'home' });
@@ -71,6 +91,10 @@ function Shell() {
       },
       openGuide: () => {
         setGuideOpen(true);
+        setDrawer(false);
+      },
+      openLegal: (page = 'terms') => {
+        setLegal(page);
         setDrawer(false);
       },
       openNotifications: () => {
@@ -122,6 +146,7 @@ function Shell() {
             <ChatWindow key={view.id} characterId={view.id} />
           )}
         </main>
+        <CanvasPanel />
       </div>
       {profileId && <CharacterProfileModal characterId={profileId} onClose={() => setProfileId(null)} />}
       <RefuelOverlay />
@@ -130,10 +155,10 @@ function Shell() {
       <NotificationsPanel open={notifOpen} onClose={() => setNotifOpen(false)} onSignIn={() => { setNotifOpen(false); setAccountOpen(true); }} />
       {notice && (
         <div className="top-notice" key={notice.id} role="status">
-          <span className="top-notice-heart">🧡</span>
           {notice.text}
         </div>
       )}
+      <LegalModal page={legal} onChange={setLegal} onClose={() => setLegal(null)} />
       <OwnKeyGuide open={guideOpen} onClose={() => setGuideOpen(false)} onOpenSettings={() => setSettingsOpen(true)} />
       <ToastStack toasts={toasts} />
     </UIContext.Provider>

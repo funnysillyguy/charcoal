@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, RefreshCw } from '../icons.jsx';
 import { MAX_SWIPES } from '../../lib/settings.js';
 
 /**

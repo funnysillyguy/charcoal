@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
   Check,
@@ -14,7 +14,7 @@ import {
   Trash2,
   Volume2,
   VolumeX,
-} from 'lucide-react';
+} from '../icons.jsx';
 import Avatar from '../Avatar.jsx';
 import SwipeController from './SwipeController.jsx';
 import { useSwipeGesture } from './useSwipeGesture.js';
@@ -24,14 +24,15 @@ import { useImageUrl } from '../../lib/images.js';
 import { fillNames, resetInfo } from '../../lib/format.js';
 import { refreshShared } from '../../lib/endpoint.js';
 import { MAX_SWIPES } from '../../lib/settings.js';
+import { useSettings } from '../../lib/store.jsx';
+import { BlockContext, autoOpenCanvas, cutProse, parseFences, kindOf, proseLength } from '../../lib/canvas.js';
 
 // Replies type out letter by letter at a steady pace, like c.ai (~57 characters/second, measured
 // from a screen recording), no matter how fast the network delivers them. If a reply runs far
 // ahead (a long one), it types faster until it catches up.
 const TYPE_CPS = 57;
 
-function useTypewriter(text, startLive) {
-  const len = text.length;
+function useTypewriter(len, startLive) {
   const [shown, setShown] = useState(startLive ? 0 : len);
   const st = useRef({ acc: startLive ? 0 : len, raf: 0, last: 0, target: len });
   st.current.target = len;
@@ -54,10 +55,12 @@ function useTypewriter(text, startLive) {
   return Math.min(shown, len);
 }
 
-/** One draft's text, typed out while it's live. Keyed by variant so each draft types on its own. */
+/** One draft's text, typed out while it's live. Keyed by variant so each draft types on its own.
+ *  Only prose is typed: a code block appears whole (as a Canvas card) when the typing reaches it. */
 function TypedReply({ text, live }) {
-  const shown = useTypewriter(text, live);
-  return <Markdown text={text.slice(0, shown)} streaming={live || shown < text.length} />;
+  const total = proseLength(text);
+  const shown = useTypewriter(total, live);
+  return <Markdown text={cutProse(text, shown)} streaming={live || shown < total} />;
 }
 
 function TypingDots() {
@@ -257,6 +260,25 @@ function ChatMessage({
     onNext: () => (onLast ? onRegenerate() : onSwipe(message.active + 1)),
   });
 
+  // Typewriter and Canvas are both optional (Settings). Hooks stay above the early return.
+  const { settings } = useSettings();
+  const typewriter = settings.typewriter !== false;
+  const canvasOn = settings.canvas !== false;
+  const draft = message.role === 'char' ? message.variants?.[message.active] || message.variants?.[0] : null;
+  const draftLive = draft?.status === 'pending' || draft?.status === 'streaming';
+  const draftId = draft?.id;
+  const draftText = draft?.text || '';
+  const blockCtx = useMemo(
+    () => (canvasOn && draftId ? { charId: character.id, messageId: message.id, variantId: draftId, streaming: draftLive } : null),
+    [canvasOn, draftId, draftLive, character.id, message.id],
+  );
+  // A web page being written opens the Canvas by itself, once, so you can watch it come together.
+  useEffect(() => {
+    if (!canvasOn || !draftLive || !draftId) return;
+    const b = parseFences(draftText).find((x) => kindOf(x.lang, x.code) === 'web');
+    if (b) autoOpenCanvas({ charId: character.id, messageId: message.id, variantId: draftId, index: b.index });
+  }, [canvasOn, draftLive, draftId, draftText, character.id, message.id]);
+
   if (message.role === 'user') {
     const text = fillNames(message.text, names);
     return (
@@ -333,7 +355,13 @@ function ChatMessage({
             {thinking && <span className="msg-thinking">thinking…</span>}
           </div>
         ) : (
-          <TypedReply key={variant?.id} text={text} live={liveAtMount.current[variant?.id] ?? false} />
+          <BlockContext.Provider value={blockCtx}>
+            {typewriter ? (
+              <TypedReply key={variant?.id} text={text} live={liveAtMount.current[variant?.id] ?? false} />
+            ) : (
+              <Markdown key={variant?.id} text={text} streaming={streaming} />
+            )}
+          </BlockContext.Provider>
         )}
       </div>
       </div>

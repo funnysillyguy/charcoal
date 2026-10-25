@@ -2,8 +2,11 @@
 // Supports: ```code fences``` (with copy), `inline code`, **bold**, *roleplay actions*, _italics_,
 // "- " / "1. " lists, "> " quotes, and paragraphs. While streaming, an unclosed *action or
 // code fence renders as if closed, so text doesn't flicker between styles.
-import { useState } from 'react';
-import { Check, Copy } from 'lucide-react';
+import { useContext, useState } from 'react';
+import { Check, Copy } from '../components/icons.jsx';
+import CanvasCard from '../components/Canvas/CanvasCard.jsx';
+import RunBlock from '../components/Canvas/RunBlock.jsx';
+import { BlockContext, kindOf } from './canvas.js';
 
 const INLINE = /(`[^`\n]+`)|(\*\*\*[^*\n]+?\*\*\*)|(\*\*[^*\n]+?\*\*)|(\*[^*\n]+?\*)|(\b_[^_\n]+?_\b)/g;
 
@@ -119,6 +122,7 @@ function renderTextBlocks(text, keyBase, streaming) {
 }
 
 export function Markdown({ text, streaming = false }) {
+  const canvas = useContext(BlockContext); // set for character replies when Canvas is on
   const segments = String(text || '').split('```');
   const out = [];
   segments.forEach((seg, i) => {
@@ -127,8 +131,12 @@ export function Markdown({ text, streaming = false }) {
     if (isCode) {
       const nl = seg.indexOf('\n');
       const lang = nl === -1 ? '' : seg.slice(0, nl).trim();
-      const code = nl === -1 ? seg : seg.slice(nl + 1);
-      out.push(<CodeBlock key={`c${i}`} lang={lang} code={code.replace(/\n$/, '')} />);
+      const code = (nl === -1 ? '' : seg.slice(nl + 1)).replace(/\n$/, '');
+      const closed = !isLast;
+      const kind = canvas ? kindOf(lang.split(/\s+/)[0], code) : null;
+      if (kind === 'web') out.push(<CanvasCard key={`c${i}`} index={(i - 1) / 2} code={code} closed={closed} />);
+      else if (kind === 'run') out.push(<RunBlock key={`c${i}`} lang={lang.split(/\s+/)[0]} code={code} closed={closed} />);
+      else out.push(<CodeBlock key={`c${i}`} lang={lang} code={code} />);
     } else if (seg.trim()) {
       out.push(...renderTextBlocks(seg.replace(/^\n+|\n+$/g, ''), `t${i}`, streaming && isLast));
     }

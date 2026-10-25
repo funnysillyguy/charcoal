@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Check, Copy, Download } from 'lucide-react';
+import { Check, Copy, Download } from '../icons.jsx';
 import { Modal } from '../ui.jsx';
 import { fillNames } from '../../lib/format.js';
 import { SANDBOXED } from '../../lib/settings.js';

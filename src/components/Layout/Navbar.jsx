@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Menu, Plus, Search, Settings, X } from 'lucide-react';
+import { Menu, Plus, Search, Settings, X } from '../icons.jsx';
 import { MenuDot } from '../NotificationsPanel.jsx';
 import { useUI } from '../ui.jsx';
 import { FuelGauge } from '../Fuel.jsx';

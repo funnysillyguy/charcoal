@@ -140,7 +140,7 @@ function offlineCharacter(idea) {
     names,
     tagline,
     description: sentence.slice(0, 380),
-    greeting: `*{{char}} looks up as you come in, clearly not expecting company.*\n\nOh. Hi. Sorry, I wasn't— *a quick, embarrassed smile* Hi, {{user}}. What brings you here?`,
+    greeting: `*{{char}} looks up as you come in, clearly not expecting company.*\n\nOh. Hi. Sorry, I wasn't... *a quick, embarrassed smile* Hi, {{user}}. What brings you here?`,
     persona: `{{char}} is ${sentence}\n\nPersonality: warm, curious, a little guarded at first. Speaks casually and reacts with small physical gestures written in asterisks.`,
     examples: `{{user}}: How are you?\n{{char}}: *shrugs, but there's a smile in it* Better now that someone's here to talk to.`,
     tags: species ? ['Furry', species[0].toUpperCase() + species.slice(1)] : ['Original'],

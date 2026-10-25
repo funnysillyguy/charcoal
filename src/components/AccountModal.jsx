@@ -13,7 +13,7 @@ import {
   RefreshCw,
   ShieldCheck,
   Trash2,
-} from 'lucide-react';
+} from './icons.jsx';
 import { Modal, ConfirmDialog, useUI } from './ui.jsx';
 import { useSettings, useStore } from '../lib/store.jsx';
 import {
@@ -257,6 +257,19 @@ function SignedOut({ onCodes }) {
         {busy && <Loader size={15} className="spin" />}
         {tab === 'in' ? 'Sign in' : tab === 'up' ? 'Create account' : 'Change password'}
       </button>
+      {tab === 'up' && (
+        <p className="legal-note">
+          By creating an account you agree to the{' '}
+          <button type="button" onClick={() => ui.openLegal('terms')}>
+            Terms
+          </button>{' '}
+          and{' '}
+          <button type="button" onClick={() => ui.openLegal('privacy')}>
+            Privacy Policy
+          </button>
+          .
+        </p>
+      )}
 
       <div className="account-links">
         {tab === 'reset' ? (
@@ -370,16 +383,10 @@ function SignedIn({ session, onCodes, onClose }) {
         </p>
       )}
 
-      <ul className="account-facts">
-        <li>
-          <CheckCircle2 size={15} /> Characters and personas sync across devices
-        </li>
-        <li>
-          <CheckCircle2 size={15} /> Your DeepSeek key is stored encrypted. Only your password unlocks it
-        </li>
-        <li>
-          <CloudOff size={15} /> Chats stay on this device
-        </li>
+      <ul className="account-perks">
+        <li>Characters and personas sync across your devices.</li>
+        <li>Your DeepSeek key is stored encrypted. Only your password can unlock it.</li>
+        <li>Chats stay on this device.</li>
       </ul>
 
       <div className="account-row">

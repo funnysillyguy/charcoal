@@ -1,5 +1,5 @@
 import { useMemo, useRef } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from '../icons.jsx';
 import Avatar from '../Avatar.jsx';
 import CharacterTile from './CharacterTile.jsx';
 import { snippet } from './Hero.jsx';

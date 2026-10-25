@@ -1,10 +1,10 @@
 // Featured spotlight: one big character at a time, with their opening line. Rotates slowly.
 import { useEffect, useState } from 'react';
-import { Info, MessageCircle } from 'lucide-react';
+import { Info, MessageCircle } from '../icons.jsx';
 import CoverArt from './CoverArt.jsx';
 import { useUI } from '../ui.jsx';
 import { useActivePersona } from '../../lib/store.jsx';
-import { chatsLabel } from '../../lib/counts.js';
+import { chatsLabel, useCountsReady } from '../../lib/counts.js';
 
 const ROTATE_MS = 8000;
 
@@ -20,6 +20,7 @@ export function snippet(text, { char, user }, max = 190) {
 }
 
 export default function Hero({ characters }) {
+  const countsReady = useCountsReady();
   const ui = useUI();
   const persona = useActivePersona();
   const [i, setI] = useState(0);
@@ -57,7 +58,7 @@ export default function Hero({ characters }) {
           <span className="hero-eyebrow">Featured</span>
           <h1 className="hero-name">{c.name}</h1>
           <p className="hero-meta">
-            @{c.creator} · <MessageCircle size={13} /> {chatsLabel(c.interactions)}
+            @{c.creator} · {countsReady ? <><MessageCircle size={13} /> {chatsLabel(c.interactions)}</> : <span className="skel" style={{ display: 'inline-block', width: 56, height: 12 }} />}
           </p>
           {line && <p className="hero-line">“{line}”</p>}
           <div className="hero-actions">

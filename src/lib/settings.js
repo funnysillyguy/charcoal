@@ -31,6 +31,8 @@ export const DEFAULT_SETTINGS = {
   repliesPerMessage: 1, // drafts per new message; swipe past the last one for more
   maxSentences: 5, // 0 = no cap
   maxTokensScale: 1,
+  typewriter: true, // replies type out letter by letter; off = text appears as it arrives
+  canvas: true, // Charcoal Canvas: live page previews and runnable code in sandboxes
   lastCheck: null, // { ok, at, message }
 };
 

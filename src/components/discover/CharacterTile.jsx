@@ -1,7 +1,7 @@
-import { Globe, Info, Link2, Lock, MessageCircle } from 'lucide-react';
+import { Globe, Info, Link2, Lock, MessageCircle } from '../icons.jsx';
 import CoverArt from './CoverArt.jsx';
 import { useUI } from '../ui.jsx';
-import { chatsLabel } from '../../lib/counts.js';
+import { chatsLabel, useCountsReady } from '../../lib/counts.js';
 
 const VIS = {
   public: { icon: Globe, label: 'Public' },
@@ -11,6 +11,7 @@ const VIS = {
 
 /** Art-first character card: big cover, name, creator, two-line tagline. */
 export default function CharacterTile({ character, style }) {
+  const countsReady = useCountsReady();
   const ui = useUI();
   const vis = character.custom ? VIS[character.visibility] || VIS.private : null;
   return (
@@ -24,10 +25,14 @@ export default function CharacterTile({ character, style }) {
               {vis.label}
             </span>
           )}
-          <span className={`tile-stat ${character.interactions ? '' : 'new'}`}>
-            {character.interactions > 0 && <MessageCircle size={12} />}
-            {chatsLabel(character.interactions, { short: true })}
-          </span>
+          {countsReady ? (
+            <span className={`tile-stat ${character.interactions ? '' : 'new'}`}>
+              {character.interactions > 0 && <MessageCircle size={12} />}
+              {chatsLabel(character.interactions, { short: true })}
+            </span>
+          ) : (
+            <span className="tile-stat skel skel-badge" aria-label="Loading chat count" />
+          )}
         </div>
         <span className="tile-name">{character.name}</span>
         <span className="tile-by">@{character.creator}</span>

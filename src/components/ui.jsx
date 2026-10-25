@@ -1,6 +1,6 @@
 // Shared UI context (navigation + modals + toasts) and small primitives.
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { X } from 'lucide-react';
+import { X } from './icons.jsx';
 
 export const UIContext = createContext(null);
 export const useUI = () => useContext(UIContext);

@@ -1,5 +1,5 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { ChevronDown, ImagePlus, SendHorizontal, Square, X, AlertTriangle, KeyRound, RefreshCw, Loader } from 'lucide-react';
+import { ChevronDown, ImagePlus, SendHorizontal, Square, X, AlertTriangle, KeyRound, RefreshCw, Loader } from '../icons.jsx';
 import HelpWriteIcon from '../HelpWriteIcon.jsx';
 import { Markdown } from '../../lib/markdown.jsx';
 import { suggestReplies } from '../../lib/assist.js';

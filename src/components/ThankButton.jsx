@@ -1,6 +1,6 @@
 // "Thank @user" for whoever powers Charcoal AI. Heart burst on tap, then a banner drops from the top.
 import { useState } from 'react';
-import { Check, Heart } from 'lucide-react';
+import { Check, Heart } from './icons.jsx';
 import { useUI } from './ui.jsx';
 import { sendThanks, useSocial } from '../lib/social.js';
 

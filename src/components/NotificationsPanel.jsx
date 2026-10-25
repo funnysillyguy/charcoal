@@ -1,6 +1,6 @@
 // Notification center (opened from the sidebar megaphone). Opening it marks everything read.
 import { useEffect } from 'react';
-import { Heart, Megaphone } from 'lucide-react';
+import { Heart, Megaphone } from './icons.jsx';
 import { Modal } from './ui.jsx';
 import { PoweredBy } from './ThankButton.jsx';
 import { markAllRead, refreshNotifications, useSocial } from '../lib/social.js';
@@ -30,7 +30,19 @@ export default function NotificationsPanel({ open, onClose, onSignIn }) {
       ) : (
         <div className="notif">
           <PoweredBy />
-          {loaded && !items.length ? (
+          {!loaded && !items.length ? (
+            <div aria-label="Loading notifications" role="status">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="notif-skel">
+                  <span className="skel" />
+                  <div>
+                    <span className="skel" style={{ height: 12, width: `${78 - i * 14}%` }} />
+                    <span className="skel" style={{ height: 10, width: 64 }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : loaded && !items.length ? (
             <div className="notif-empty">
               <Megaphone size={22} />
               <p>Nothing yet. Thanks and announcements show up here.</p>
@@ -44,7 +56,6 @@ export default function NotificationsPanel({ open, onClose, onSignIn }) {
                     <p>
                       {n.actor_username && <b>@{n.actor_username} </b>}
                       {n.body}
-                      {n.kind === 'thanks' && ' 🧡'}
                     </p>
                     <span>{relativeTime(new Date(n.created_at).getTime())}</span>
                   </div>

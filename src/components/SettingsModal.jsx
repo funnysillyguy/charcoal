@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { CheckCircle2, Eye, EyeOff, Loader, PlugZap, ShieldAlert, Sparkles, Users, XCircle } from 'lucide-react';
+import { CheckCircle2, Eye, EyeOff, Loader, PlugZap, ShieldAlert, Sparkles, Users, XCircle } from './icons.jsx';
 import { Modal, useUI } from './ui.jsx';
 import { SHARED_BASE, SHARED_MODEL, setSharedKey, useShared, refreshShared } from '../lib/endpoint.js';
 import { CLOUD_ENABLED, CLOUD_KEY, accessToken } from '../lib/cloud.js';
@@ -200,7 +200,7 @@ export default function SettingsModal({ open, onClose, onSaved }) {
       {!SANDBOXED && CLOUD_ENABLED && (
         <div className="builtin-card">
           <div className="builtin-head">
-            <Sparkles size={16} />
+            <span className="logo-mark sm" aria-hidden="true" />
             <strong>Charcoal AI</strong>
             <span className={`status-dot ${shared.enabled ? 'live' : shared.signedIn ? 'demo' : 'unverified'}`} />
           </div>
@@ -355,6 +355,45 @@ export default function SettingsModal({ open, onClose, onSaved }) {
           ))}
         </div>
         <p className="field-hint">Most sentences a reply can have, actions included. “No cap” uses each character’s own length setting.</p>
+      </div>
+
+      <div className="field">
+        <div className="switch-row">
+          <span>
+            <span className="field-label">Typewriter effect</span>
+            <span className="field-hint">
+              Replies type out letter by letter. Turn it off and text shows up as fast as it arrives.
+            </span>
+          </span>
+          <button
+            type="button"
+            className="switch"
+            role="switch"
+            aria-checked={draft.typewriter !== false}
+            aria-label="Typewriter effect"
+            onClick={() => set({ typewriter: draft.typewriter === false })}
+          />
+        </div>
+      </div>
+
+      <div className="field">
+        <div className="switch-row">
+          <span>
+            <span className="field-label">Canvas and code runner</span>
+            <span className="field-hint">
+              Web pages a character writes open in a live preview beside the chat, and Python or JavaScript can be run
+              on the spot. Everything runs in an isolated sandbox with no internet and no access to your account.
+            </span>
+          </span>
+          <button
+            type="button"
+            className="switch"
+            role="switch"
+            aria-checked={draft.canvas !== false}
+            aria-label="Canvas and code runner"
+            onClick={() => set({ canvas: draft.canvas === false })}
+          />
+        </div>
       </div>
 
       {!SANDBOXED && (

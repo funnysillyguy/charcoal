@@ -10,6 +10,8 @@ import './styles/layout.css';
 import './styles/motion.css';
 import './styles/discover.css';
 import './styles/flat.css';
+import './styles/canvas.css';
+import './styles/honest.css';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

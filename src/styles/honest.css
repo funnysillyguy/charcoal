@@ -1,0 +1,337 @@
+/* Loaded last. Strips the patterns that make a site read as AI-made: glass blur, glow and drop
+   shadows, bouncy hover motion, pill-everything rounding, icon-as-art covers. What's left is
+   solid surfaces, 1px borders, tight corners and type doing the work. */
+
+:root {
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 10px;
+  --r-xl: 12px;
+  --shadow-pop: 0 0 0 1px var(--line-strong);
+  --glow: 0 0 0 1px var(--line-strong);
+  --font-cover: 'Fraunces', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+}
+
+/* ---------- no glass ---------- */
+.tile-badge,
+.tile-info,
+.guide-sound,
+.brk,
+.refuel,
+.modal-backdrop,
+.drawer-scrim {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.tile-badge {
+  background: #111113;
+}
+.tile-info {
+  background: #111113;
+}
+.guide-sound {
+  background: #111113;
+}
+.brk {
+  background: #141417;
+}
+.refuel {
+  background: #121214;
+}
+.modal-backdrop {
+  background: rgba(6, 6, 8, 0.82);
+}
+
+/* ---------- no drop shadows or glows: a 1px line does the separating ---------- */
+.modal,
+.popover,
+.toast,
+.sidebar,
+.jump-btn,
+.fuel-pop,
+.top-notice,
+.guide-video,
+.hero-art,
+.avatar-glow,
+.avatar-gen {
+  box-shadow: 0 0 0 1px var(--line-strong);
+}
+.avatar-gen,
+.avatar-glow {
+  box-shadow: none;
+}
+.btn-primary:hover:not(:disabled),
+.btn-glow:hover:not(:disabled),
+.card:hover,
+.foryou-card:hover,
+.composer-box:focus-within {
+  box-shadow: none;
+}
+.input:focus,
+.textarea:focus,
+.select:focus,
+.search:focus-within {
+  box-shadow: none;
+  border-color: #5a5a62;
+}
+.status-dot.live {
+  box-shadow: none;
+}
+.logo-mark::after {
+  box-shadow: none !important;
+  animation: none !important;
+}
+
+/* ---------- no hover choreography: color changes only ---------- */
+.tile-main:hover .tile-art .cover,
+.tile-main:focus-visible .tile-art .cover,
+.hero-art:hover,
+.thank-btn:hover:not(:disabled),
+.card:hover,
+.foryou-card:hover,
+.card:hover .avatar,
+.foryou-card:hover .avatar,
+.recent-row:hover,
+.cavatar-btn:hover .cavatar-badge {
+  transform: none;
+}
+.cavatar-btn:hover .cavatar-badge {
+  transform: translateX(-50%);
+}
+.tile {
+  animation: none;
+}
+
+/* ---------- tighter corners: rectangles with a small radius, not pills ---------- */
+.btn,
+.btn-primary,
+.btn-ghost,
+.btn-glow,
+.chip,
+.tab,
+.create-pill,
+.segmented,
+.provider-chip,
+.provider-pill,
+.composer-note,
+.thank-btn,
+.creator-back,
+.creator-link,
+.continue-item,
+.ai-pill,
+.tile-stat,
+.cv-building {
+  border-radius: var(--r-sm);
+}
+.segmented button {
+  border-radius: 4px;
+}
+.search,
+.composer-box,
+.input,
+.textarea,
+.select {
+  border-radius: var(--r-md);
+}
+.modal {
+  border-radius: var(--r-lg);
+}
+.hero,
+.tile-art,
+.hero-art {
+  border-radius: var(--r-md);
+}
+
+/* ---------- covers: type, not icons ---------- */
+.cover-type {
+  container-type: inline-size;
+  background: color-mix(in srgb, var(--av-base) 86%, #1b1b1e);
+  color: #f3eee7;
+}
+.cover-type-in {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 9cqw 9cqw 10cqw;
+}
+.cover-type::after {
+  display: none;
+}
+.cover-type-label {
+  font-family: var(--font-ui);
+  font-size: max(9px, 6.2cqw);
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--av-light) 58%, #b9b4ad);
+}
+.cover-type-name {
+  font-family: var(--font-cover);
+  font-weight: 600;
+  font-optical-sizing: auto;
+  line-height: 0.98;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+  overflow-wrap: break-word;
+}
+/* small tiles leave room at the bottom for the "New"/count badge */
+.tile-art .cover-type-in {
+  padding-bottom: 27cqw;
+}
+.avatar-mono {
+  background: color-mix(in srgb, var(--av-base) 86%, #1b1b1e);
+  color: #f3eee7;
+  display: inline-grid;
+  place-items: center;
+}
+.avatar-mono .avatar-initials {
+  font-family: var(--font-cover);
+  font-weight: 600;
+  line-height: 1;
+  transform: translateY(-0.03em);
+}
+
+/* ---------- category tabs are words, not icon chips ---------- */
+.tabs .tab svg {
+  display: none;
+}
+
+/* ---------- account perks list: plain lines, no check bullets ---------- */
+.account-perks {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text-2);
+  font-size: 0.86rem;
+}
+
+/* ---------- legal pages ---------- */
+.legal {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 2px 24px;
+  color: var(--text-msg);
+  line-height: 1.65;
+  font-size: 0.95rem;
+}
+.legal h1 {
+  font-size: 1.6rem;
+  letter-spacing: -0.02em;
+  margin: 0 0 4px;
+  color: var(--text);
+}
+.legal h2 {
+  font-size: 1.02rem;
+  margin: 28px 0 6px;
+  color: var(--text);
+}
+.legal p,
+.legal ul {
+  margin: 0 0 10px;
+}
+.legal ul {
+  padding-left: 20px;
+}
+.legal li {
+  margin: 3px 0;
+}
+.legal .legal-date {
+  color: var(--text-3);
+  font-size: 0.85rem;
+  margin-bottom: 18px;
+}
+.legal a,
+.legal .link-btn {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.legal-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+.legal-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  padding: 0 14px 10px;
+  font-size: 0.75rem;
+  color: var(--text-3);
+}
+.legal-links button {
+  color: inherit;
+}
+.legal-links button:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+.legal-note {
+  font-size: 0.78rem;
+  color: var(--text-3);
+  margin: 10px 0 0;
+}
+.legal-note button {
+  color: var(--text-2);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ---------- skeletons ---------- */
+.skel {
+  display: block;
+  border-radius: var(--r-xs);
+  background: linear-gradient(90deg, var(--raised), var(--raised-2), var(--raised));
+  background-size: 200% 100%;
+  animation: skel 1.2s ease-in-out infinite;
+}
+@keyframes skel {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+.skel-badge {
+  width: 38px;
+  height: 20px;
+}
+.notif-skel {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 4px;
+}
+.notif-skel .skel:first-child {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+.notif-skel div {
+  display: grid;
+  gap: 6px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .skel {
+    animation: none;
+  }
+}
+
+.logo-mark.sm {
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
+}
+.logo-mark.sm::after {
+  left: 3px;
+  right: 2px;
+  height: 2px;
+}

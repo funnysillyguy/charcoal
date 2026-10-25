@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ArrowDown, Download, Drama, Eraser, ImagePlus, KeyRound, Menu, MoreHorizontal, Trash2, UserRound, X } from 'lucide-react';
+import { ArrowDown, Download, Drama, Eraser, ImagePlus, KeyRound, Menu, MoreHorizontal, Trash2, UserRound, X } from '../icons.jsx';
 import { MenuDot } from '../NotificationsPanel.jsx';
 import Avatar from '../Avatar.jsx';
 import ChatMessage from './ChatMessage.jsx';
@@ -11,6 +11,7 @@ import { useStore, useCharacter, useActivePersona } from '../../lib/store.jsx';
 import { useChatEngine } from '../../lib/useChatEngine.js';
 import { imageFilesFrom, deleteImages } from '../../lib/images.js';
 import { firstName } from '../../lib/format.js';
+import { registerSender } from '../../lib/canvas.js';
 import { MOOD_PRESETS } from '../../data/characters.js';
 
 function MoodPicker({ chat, character, onChange }) {
@@ -128,6 +129,9 @@ export default function ChatWindow({ characterId }) {
   const persona = useActivePersona();
   const ui = useUI();
   const engine = useChatEngine(character);
+
+  // Lets a Run block hand its output to the character as your next message.
+  useEffect(() => registerSender((text) => engine.send(text)), [engine.send]);
 
   const scrollRef = useRef(null);
   const inputRef = useRef(null);

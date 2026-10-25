@@ -6,6 +6,7 @@ import { local } from './storage.js';
 import { formatCount } from './format.js';
 
 let counts = {};
+let ready = !CLOUD_ENABLED; // false until the first answer (or failure), so badges show a skeleton, not a wrong "New"
 const listeners = new Set();
 const emit = () => listeners.forEach((fn) => fn());
 const RECORDED_KEY = 'charcoal:chatted';
@@ -18,13 +19,15 @@ export async function refreshCounts() {
       headers: { apikey: CLOUD_KEY, 'Content-Type': 'application/json' },
       body: '{}',
     });
-    if (!res.ok) return;
-    const rows = await res.json();
-    counts = Object.fromEntries(rows.map((r) => [r.character_id, Number(r.chats) || 0]));
-    emit();
+    if (res.ok) {
+      const rows = await res.json();
+      counts = Object.fromEntries(rows.map((r) => [r.character_id, Number(r.chats) || 0]));
+    }
   } catch {
     /* offline: keep what we have */
   }
+  ready = true;
+  emit();
 }
 
 /** Count this account as having chatted with a character (once, ever). */
@@ -58,6 +61,10 @@ const subscribe = (fn) => {
 };
 export function useCounts() {
   return useSyncExternalStore(subscribe, () => counts, () => counts);
+}
+
+export function useCountsReady() {
+  return useSyncExternalStore(subscribe, () => ready, () => ready);
 }
 
 /** "New" until someone real has chatted; then "1 chat", "12 chats", "1.2k chats". */

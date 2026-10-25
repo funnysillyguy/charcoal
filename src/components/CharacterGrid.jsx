@@ -1,4 +1,4 @@
-import { PenTool, SearchX } from 'lucide-react';
+import { PenTool, SearchX } from './icons.jsx';
 import CharacterTile from './discover/CharacterTile.jsx';
 import { EmptyState, useUI } from './ui.jsx';
 

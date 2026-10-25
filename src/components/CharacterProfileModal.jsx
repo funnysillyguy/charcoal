@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Copy, ExternalLink, Globe, Link2, Lock, MessageSquare, Pencil, Trash2 } from 'lucide-react';
+import { Copy, ExternalLink, Globe, Link2, Lock, MessageSquare, Pencil, Trash2 } from './icons.jsx';
 import { Modal, ConfirmDialog, useUI } from './ui.jsx';
 import Avatar from './Avatar.jsx';
 import { Markdown } from '../lib/markdown.jsx';

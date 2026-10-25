@@ -1,5 +1,5 @@
 // Home-page heads-up when today's free built-in AI is used up.
-import { MoonStar, PlayCircle } from 'lucide-react';
+import { MoonStar, PlayCircle } from '../icons.jsx';
 import { useUI } from '../ui.jsx';
 import { useSettings } from '../../lib/store.jsx';
 import { useShared } from '../../lib/endpoint.js';

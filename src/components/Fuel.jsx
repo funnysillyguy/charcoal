@@ -1,6 +1,6 @@
 // Fuel gauge (top right) and the 25-second refuel break.
 import { useEffect, useRef, useState } from 'react';
-import { Fuel } from 'lucide-react';
+import { Fuel } from './icons.jsx';
 import { useFuel, REFUEL_MS } from '../lib/fuel.js';
 import { useSettings } from '../lib/store.jsx';
 import { usePopover } from './ui.jsx';

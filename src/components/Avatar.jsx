@@ -1,12 +1,11 @@
-import { EMBLEMS } from './emblems.js';
 import Portrait from './Portrait.jsx';
 
 /**
- * Character avatar. Uploaded images render as-is; generated ones are a lit-from-within
- * gradient with an emblem, so every persona has a recognizable mark without stock art.
+ * Character avatar. Uploaded images render as-is, drawn portraits sit on their color,
+ * and everyone else gets a monogram: their initial, set in the cover serif on their own color.
  */
 export default function Avatar({ avatar, name = '', size = 40, radius, round = false, className = '', glow = false }) {
-  const r = round ? '50%' : radius ?? Math.round(size * 0.28);
+  const r = round ? '50%' : radius ?? Math.round(size * 0.22);
   const style = { width: size, height: size, borderRadius: r };
 
   if (avatar?.kind === 'image' && avatar.src) {
@@ -31,32 +30,16 @@ export default function Avatar({ avatar, name = '', size = 40, radius, round = f
     );
   }
 
-  const Icon = EMBLEMS[avatar?.emblem];
-  const initials = name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase();
-
+  const initial = (name.trim()[0] || '?').toUpperCase();
   return (
     <span
-      className={`avatar avatar-gen ${glow ? 'avatar-glow' : ''} ${className}`}
-      style={{
-        ...style,
-        '--av-base': base,
-        '--av-light': light,
-      }}
+      className={`avatar avatar-gen avatar-mono ${glow ? 'avatar-glow' : ''} ${className}`}
+      style={{ ...style, '--av-base': base, '--av-light': light }}
       aria-hidden="true"
     >
-      {Icon ? (
-        <Icon size={Math.round(size * 0.46)} strokeWidth={size > 64 ? 1.4 : 1.8} />
-      ) : (
-        <span className="avatar-initials" style={{ fontSize: size * 0.4 }}>
-          {initials}
-        </span>
-      )}
+      <span className="avatar-initials" style={{ fontSize: Math.round(size * 0.5) }}>
+        {initial}
+      </span>
     </span>
   );
 }

@@ -1,4 +1,4 @@
-import { Globe, Info, Link2, Lock, MessageSquare } from 'lucide-react';
+import { Globe, Info, Link2, Lock, MessageSquare } from './icons.jsx';
 import Avatar from './Avatar.jsx';
 import { useUI } from './ui.jsx';
 import { formatCount } from '../lib/format.js';
