@@ -25,6 +25,41 @@ import { fillNames, resetInfo } from '../../lib/format.js';
 import { refreshShared } from '../../lib/endpoint.js';
 import { MAX_SWIPES } from '../../lib/settings.js';
 
+// Replies type out letter by letter at a steady pace, like c.ai (~57 characters/second, measured
+// from a screen recording), no matter how fast the network delivers them. If a reply runs far
+// ahead (a long one), it types faster until it catches up.
+const TYPE_CPS = 57;
+
+function useTypewriter(text, startLive) {
+  const len = text.length;
+  const [shown, setShown] = useState(startLive ? 0 : len);
+  const st = useRef({ acc: startLive ? 0 : len, raf: 0, last: 0, target: len });
+  st.current.target = len;
+  if (len < st.current.acc) st.current.acc = 0; // the draft was rewritten (retry): type it again
+  useEffect(() => {
+    const s = st.current;
+    if (s.raf || s.acc >= len) return;
+    s.last = performance.now();
+    const tick = (now) => {
+      const behind = s.target - s.acc;
+      const cps = behind > 900 ? TYPE_CPS * 2.5 : TYPE_CPS;
+      s.acc = Math.min(s.target, s.acc + ((now - s.last) / 1000) * cps);
+      s.last = now;
+      setShown(Math.floor(s.acc));
+      s.raf = s.acc < s.target ? requestAnimationFrame(tick) : 0;
+    };
+    s.raf = requestAnimationFrame(tick);
+  }, [len]);
+  useEffect(() => () => cancelAnimationFrame(st.current.raf), []);
+  return Math.min(shown, len);
+}
+
+/** One draft's text, typed out while it's live. Keyed by variant so each draft types on its own. */
+function TypedReply({ text, live }) {
+  const shown = useTypewriter(text, live);
+  return <Markdown text={text.slice(0, shown)} streaming={live || shown < text.length} />;
+}
+
 function TypingDots() {
   return (
     <span className="typing" aria-label="Typing">
@@ -204,6 +239,7 @@ function ChatMessage({
   // Remember the last committed swipe so a new draft slides in from the right side.
   // Hooks stay above the early return.
   const lastActive = useRef(message.active);
+  const liveAtMount = useRef({}); // variantId -> was it still being written when we first showed it
   useEffect(() => {
     lastActive.current = message.active;
   });
@@ -244,6 +280,9 @@ function ChatMessage({
   }
 
   const variant = message.variants[message.active] || message.variants[0];
+  if (variant && liveAtMount.current[variant.id] === undefined) {
+    liveAtMount.current[variant.id] = variant.status === 'pending' || variant.status === 'streaming';
+  }
   const swipeDir = message.active > lastActive.current ? 'next' : message.active < lastActive.current ? 'prev' : null;
   const text = fillNames(variant?.text || '', names);
   const pending = variant?.status === 'pending' || (variant?.status === 'streaming' && !text);
@@ -294,7 +333,7 @@ function ChatMessage({
             {thinking && <span className="msg-thinking">thinking…</span>}
           </div>
         ) : (
-          <Markdown text={text} streaming={streaming} />
+          <TypedReply key={variant?.id} text={text} live={liveAtMount.current[variant?.id] ?? false} />
         )}
       </div>
       </div>

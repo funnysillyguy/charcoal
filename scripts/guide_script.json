@@ -1,0 +1,56 @@
+[
+  {
+    "id": "intro",
+    "kind": "rec",
+    "caption": "Out of free AI for today?",
+    "say": "Hey! So if you've been chatting a bunch on Charcoal, you might see this: you've used today's free AI. No worries. It refills every day. But if you want to keep going right now, you can plug in your own DeepSeek key. It's super cheap, and it takes like two minutes. Let me show you."
+  },
+  {
+    "id": "getkey",
+    "kind": "card",
+    "caption": "1  Get a DeepSeek key",
+    "say": "First, grab a key. Head to platform dot deepseek dot com and make an account. Add a little credit. Honestly, two bucks lasts forever. Then go to API keys, hit create new API key, and copy it. It starts with S K dash."
+  },
+  {
+    "id": "gear",
+    "kind": "rec",
+    "caption": "2  Tap the gear",
+    "say": "Now come back to Charcoal and tap the gear, up in the top right. That opens your settings."
+  },
+  {
+    "id": "paste",
+    "kind": "rec",
+    "caption": "3  Paste your key",
+    "say": "See where it says, your own DeepSeek key? Tap that box and paste your key in. It shows up as dots, so nobody can peek at it."
+  },
+  {
+    "id": "test",
+    "kind": "rec",
+    "caption": "4  Tap Test connection",
+    "say": "Now tap test connection. If it says connected, you're good to go."
+  },
+  {
+    "id": "save",
+    "kind": "rec",
+    "caption": "5  Tap Save",
+    "say": "Then hit save."
+  },
+  {
+    "id": "done",
+    "kind": "rec",
+    "caption": "No more daily limit",
+    "say": "And just like that, the limit's gone. No daily cap anymore. It just runs on your key now."
+  },
+  {
+    "id": "chat",
+    "kind": "rec",
+    "caption": "Chat like normal",
+    "say": "Pick anyone you want and chat like normal. Replies type out just like before."
+  },
+  {
+    "id": "outro",
+    "kind": "outro",
+    "caption": "",
+    "say": "That's it. Have fun on Charcoal!"
+  }
+]

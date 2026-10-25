@@ -158,6 +158,17 @@ export default function ChatWindow({ characterId }) {
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [characterId]);
+  // Replies type out inside memoized messages, so follow the column's height too.
+  useEffect(() => {
+    const el = scrollRef.current;
+    const col = el?.firstElementChild;
+    if (!el || !col || typeof ResizeObserver === 'undefined') return undefined;
+    const ro = new ResizeObserver(() => {
+      if (stickRef.current) el.scrollTop = el.scrollHeight;
+    });
+    ro.observe(col);
+    return () => ro.disconnect();
+  }, [characterId]);
 
   if (!character) {
     return (

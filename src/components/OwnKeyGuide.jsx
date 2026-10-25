@@ -16,7 +16,7 @@ export default function OwnKeyGuide({ open, onClose, onOpenSettings }) {
     setMuted(v.muted);
   };
   return (
-    <Modal open={open} onClose={onClose} title="Keep chatting with your own key" subtitle="Unlimited, billed to your own DeepSeek account. Takes about 2 minutes." size="md">
+    <Modal open={open} onClose={onClose} title="Keep chatting with your own key" subtitle="Unlimited, billed to your own DeepSeek account. Watch with sound, it walks you through every tap." size="md">
       <div className="guide">
         <div className="guide-player">
           <video
@@ -31,9 +31,9 @@ export default function OwnKeyGuide({ open, onClose, onOpenSettings }) {
             onClick={(e) => (e.currentTarget.paused ? e.currentTarget.play() : e.currentTarget.pause())}
             onVolumeChange={(e) => setMuted(e.currentTarget.muted)}
           />
-          <button type="button" className="guide-sound" onClick={toggleSound} aria-label={muted ? 'Turn sound on' : 'Mute'}>
+          <button type="button" className={`guide-sound ${muted ? 'nudge' : ''}`} onClick={toggleSound} aria-label={muted ? 'Turn sound on' : 'Mute'}>
             {muted ? <VolumeX size={15} /> : <Volume2 size={15} />}
-            {muted ? 'Sound on' : 'Mute'}
+            {muted ? 'Tap for sound' : 'Mute'}
           </button>
         </div>
         <ol className="guide-steps">
