@@ -4,7 +4,7 @@ import { Info, MessageCircle } from 'lucide-react';
 import CoverArt from './CoverArt.jsx';
 import { useUI } from '../ui.jsx';
 import { useActivePersona } from '../../lib/store.jsx';
-import { formatCount } from '../../lib/format.js';
+import { chatsLabel } from '../../lib/counts.js';
 
 const ROTATE_MS = 8000;
 
@@ -57,7 +57,7 @@ export default function Hero({ characters }) {
           <span className="hero-eyebrow">Featured</span>
           <h1 className="hero-name">{c.name}</h1>
           <p className="hero-meta">
-            @{c.creator} · <MessageCircle size={13} /> {formatCount(c.interactions)} chats
+            @{c.creator} · <MessageCircle size={13} /> {chatsLabel(c.interactions)}
           </p>
           {line && <p className="hero-line">“{line}”</p>}
           <div className="hero-actions">

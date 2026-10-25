@@ -7,12 +7,11 @@ async def main():
         b = await p.chromium.launch()
         pg = await b.new_page(viewport={'width': 1366, 'height': 900}, device_scale_factor=2)
         await pg.goto('http://localhost:4175/'); await pg.wait_for_selector('.tile-grid .tile-art'); await pg.wait_for_timeout(1200)
-        arts = pg.locator('.tile-grid .tile-art')
-        want = [1, 3, 9, 4, 12]  # fox, wolf, red panda, sparkle, dragon (portrait-heavy)
         imgs = []
-        for i in want:
-            if i < await arts.count():
-                png = await arts.nth(i).screenshot()
+        for name in ['Rhett Ashby', 'Sable Northwind', 'Pemba', 'Seraphine Vale']:  # picked by name, not position
+            art = pg.locator(f'.tile-grid .tile:has(.tile-name:text-is("{name}")) .tile-art').first
+            if await art.count():
+                png = await art.screenshot()
                 imgs.append('data:image/png;base64,' + base64.b64encode(png).decode())
         tiles = ''.join(f'<div class="t" style="--r:{r}deg;--y:{y}px"><img src="{src}"></div>' for src, r, y in zip(imgs[:4], [-6, 3, -2, 5], [30, -10, 20, -24]))
         html = f"""<html><head><style>

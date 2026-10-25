@@ -114,7 +114,7 @@ async def main():
 
         async def a_chat(st):
             await until(st, at('chat', 'pick anyone') - 0.2)
-            await tap('.tile-grid .tile-main >> nth=1', 0.7)
+            await tap('.tile-grid .tile:has(.tile-name:text-is("Rhett Ashby")) .tile-main', 0.7)  # matches the scripted reply
             await asyncio.sleep(0.8)
             await tap('textarea', 0.5)
             await pg.keyboard.type('hey, the usual?', delay=55)

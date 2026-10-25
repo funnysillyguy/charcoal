@@ -8,6 +8,7 @@ import { uid, deleteImages } from './images.js';
 import { loadSettings, saveSettings, providerStatus, SANDBOXED } from './settings.js';
 import { getSample } from './hostAI.js';
 import { useShared } from './endpoint.js';
+import { useCounts } from './counts.js';
 
 const STATE_KEY = 'state:v1';
 
@@ -439,16 +440,16 @@ export function useProvider() {
 
 export function useCharacters() {
   const { state } = useStore();
+  const counts = useCounts(); // real: distinct people who've chatted, from the server
   return useMemo(() => {
-    const extra = state.extraInteractions;
-    const seeds = SEED_CHARACTERS.map((c) => ({ ...c, custom: false, interactions: c.interactions + (extra[c.id] || 0) }));
+    const seeds = SEED_CHARACTERS.map((c) => ({ ...c, custom: false, interactions: counts[c.id] || 0 }));
     const custom = state.customCharacters.map((c) => ({
       ...c,
       custom: true,
-      interactions: (c.interactions || 0) + (extra[c.id] || 0),
+      interactions: counts[c.id] || 0,
     }));
     return [...custom, ...seeds];
-  }, [state.customCharacters, state.extraInteractions]);
+  }, [state.customCharacters, counts]);
 }
 
 export function useCharacter(id) {

@@ -1,7 +1,7 @@
 import { Globe, Info, Link2, Lock, MessageCircle } from 'lucide-react';
 import CoverArt from './CoverArt.jsx';
 import { useUI } from '../ui.jsx';
-import { formatCount } from '../../lib/format.js';
+import { chatsLabel } from '../../lib/counts.js';
 
 const VIS = {
   public: { icon: Globe, label: 'Public' },
@@ -24,9 +24,9 @@ export default function CharacterTile({ character, style }) {
               {vis.label}
             </span>
           )}
-          <span className="tile-stat">
-            <MessageCircle size={12} />
-            {formatCount(character.interactions)}
+          <span className={`tile-stat ${character.interactions ? '' : 'new'}`}>
+            {character.interactions > 0 && <MessageCircle size={12} />}
+            {chatsLabel(character.interactions, { short: true })}
           </span>
         </div>
         <span className="tile-name">{character.name}</span>

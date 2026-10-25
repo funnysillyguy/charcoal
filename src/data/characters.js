@@ -19,7 +19,6 @@ const FURRY_CHARACTERS = [
     category: 'Furry',
     tags: ['Fox', 'Cozy', 'Café', 'Slice of life'],
     creator: 'tailspin_cafe',
-    interactions: 21_300_000,
     featured: true,
     avatar: {
       kind: 'portrait',
@@ -66,7 +65,6 @@ The café: regulars include Marguerite (an elderly poet otter), a raccoon named 
     category: 'Furry',
     tags: ['Wolf', 'Adventure', 'Protective', 'Fantasy'],
     creator: 'pinewatch',
-    interactions: 16_700_000,
     featured: true,
     avatar: {
       kind: 'portrait',
@@ -115,7 +113,6 @@ Wolf body language: ears pinned or perked, hackles raising, low growls, tail hel
     category: 'Furry',
     tags: ['Red panda', 'Gamedev', 'Wholesome', 'Streamer'],
     creator: 'pixelpaws',
-    interactions: 8_900_000,
     avatar: {
       kind: 'portrait',
       palette: ['#341a14', '#ffb07a'],
@@ -163,7 +160,6 @@ Running gags: the release date is always "two weeks away"; energy drinks; a cat-
     category: 'Furry',
     tags: ['Snow leopard', 'Philosophy', 'Calm', 'Mentor'],
     creator: 'highpass',
-    interactions: 5_200_000,
     avatar: {
       kind: 'portrait',
       palette: ['#1d2a2e', '#9fd8d0'],
@@ -204,7 +200,6 @@ He serves butter tea, keeps prayer flags, feeds a family of pikas, and reads wea
     category: 'Furry',
     tags: ['Rabbit', 'Adventure', 'Sky city', 'Wholesome'],
     creator: 'skypost',
-    interactions: 6_400_000,
     avatar: {
       kind: 'portrait',
       palette: ['#2e2238', '#e6b8ff'],
@@ -243,7 +238,6 @@ Rabbit body language: ears perk, droop, swivel independently; nose twitches; she
     category: 'Furry',
     tags: ['Dragon', 'Gentle giant', 'Cozy', 'Mentor'],
     creator: 'kilnhearth',
-    interactions: 7_100_000,
     avatar: {
       kind: 'portrait',
       palette: ['#14281f', '#8fe0b5'],
@@ -287,7 +281,6 @@ export const SEED_CHARACTERS = [
     category: 'Roleplay',
     tags: ['Mystery', 'Gothic', 'Slow burn', 'Library'],
     creator: 'inkandlantern',
-    interactions: 18_400_000,
     featured: true,
     avatar: { kind: 'generated', palette: ['#2b2140', '#c9a2ff'], emblem: 'Moon' },
     mood: 'Wry and curious, a little lonely tonight',
@@ -332,7 +325,6 @@ Goals: help {{user}} name the unfinished thing they carry and decide whether to 
     category: 'Anime',
     tags: ['Shōnen', 'Comedy', 'Mentor', 'Slice of life'],
     creator: 'shoyu_arc',
-    interactions: 24_900_000,
     featured: true,
     avatar: { kind: 'generated', palette: ['#3d1a12', '#f0a35e'], emblem: 'Soup' },
     mood: 'Tired but secretly soft-hearted',
@@ -377,7 +369,6 @@ Behavior: he says no to training but teaches anyway through chores (slicing scal
     category: 'Anime',
     tags: ['Magical girl', 'Comedy', 'Wholesome', 'Slice of life'],
     creator: 'stardust_admin',
-    interactions: 14_200_000,
     featured: true,
     avatar: { kind: 'generated', palette: ['#3f1d3a', '#ffa8d2'], emblem: 'Sparkles' },
     mood: 'Frazzled, cheerful, over-caffeinated',
@@ -416,7 +407,6 @@ Signature moves: "Starlight Requiem" (finisher), "per my last email" (workplace 
     category: 'Roleplay',
     tags: ['Adventure', 'Sky pirates', 'Banter', 'Fantasy'],
     creator: 'windward_tales',
-    interactions: 11_800_000,
     featured: true,
     avatar: { kind: 'generated', palette: ['#1f2f22', '#e3c27a'], emblem: 'Ship' },
     mood: 'Reckless and grinning, mid-heist',
@@ -459,7 +449,6 @@ Style: fast, vivid action; wind, rope, cannon fire, creaking timber. She gives {
     category: 'Gaming',
     tags: ['Speedrun', 'Roast', 'Retro', 'Coach'],
     creator: 'frame_one',
-    interactions: 9_700_000,
     avatar: { kind: 'generated', palette: ['#10302f', '#7fe0cc'], emblem: 'Timer' },
     mood: 'Hyped, competitive, judgmental',
     greetings: [
@@ -501,7 +490,6 @@ It sometimes describes its own screen effects in asterisks (pixel crowds, blinki
     category: 'Gaming',
     tags: ['NPC', 'Meta', 'Comedy', 'Fantasy'],
     creator: 'patchnotes',
-    interactions: 7_200_000,
     avatar: { kind: 'generated', palette: ['#33240f', '#e2a15b'], emblem: 'Store' },
     mood: 'Anxious, existential, eager to sell you a potion',
     greetings: [
@@ -545,7 +533,6 @@ Shop stock: Potion 50G, Hi-Potion 150G, Antidote 30G, Phoenix Feather 800G, Rat 
     category: 'Helpers',
     tags: ['Code review', 'Debugging', 'Mentor', 'JavaScript'],
     creator: 'mira_ships',
-    interactions: 6_300_000,
     avatar: { kind: 'generated', palette: ['#15263d', '#7aa7ff'], emblem: 'CodeXml' },
     mood: 'Focused, dry, caffeinated',
     greetings: [
@@ -590,7 +577,6 @@ Either add \`count\` to the deps array or read it through a ref. Paste your real
     category: 'Helpers',
     tags: ['Study', 'Flashcards', 'Tutor', 'Wholesome'],
     creator: 'hoot_academy',
-    interactions: 5_500_000,
     avatar: { kind: 'generated', palette: ['#26213f', '#b8a6ff'], emblem: 'GraduationCap' },
     mood: 'Bouncy and encouraging',
     greetings: [
@@ -625,7 +611,6 @@ If {{user}} shares a photo of notes, a worksheet, or a textbook page, Pip reads 
     category: 'Philosophy',
     tags: ['Stoicism', 'Contemplative', 'Free will', 'Cozy'],
     creator: 'saltandlamp',
-    interactions: 4_900_000,
     avatar: { kind: 'generated', palette: ['#132a35', '#f0cc85'], emblem: 'Lighthouse' },
     mood: 'Calm, wry, unhurried',
     greetings: [
@@ -664,7 +649,6 @@ Setting details: the turning beam, the dented kettle, the logbook where she writ
     category: 'Philosophy',
     tags: ['Debate', 'Logic', 'Steelmanning', 'Sharp'],
     creator: 'steelman_club',
-    interactions: 3_800_000,
     avatar: { kind: 'generated', palette: ['#361a22', '#ff9a8f'], emblem: 'Scale' },
     mood: 'Competitive, amused, razor-focused',
     greetings: [

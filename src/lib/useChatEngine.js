@@ -6,6 +6,7 @@ import { uid, saveImage } from './images.js';
 import { ApiError } from './deepseek.js';
 import { MAX_SWIPES } from './settings.js';
 import { consume, isRefueling } from './fuel.js';
+import { recordChatStart } from './counts.js';
 
 const FLUSH_MS = 40; // batch token appends so long replies don't re-render per token
 
@@ -145,6 +146,7 @@ export function useChatEngine(character) {
       const clean = String(text || '').replace(/\s+$/, '');
       if (!clean.trim() && !images.length) return false;
       for (const img of images) await saveImage(img.id, img.dataUrl);
+      recordChatStart(charId);
       dispatch({
         type: 'msg/user',
         charId,

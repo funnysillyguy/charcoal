@@ -5,6 +5,7 @@ import Avatar from './Avatar.jsx';
 import { Markdown } from '../lib/markdown.jsx';
 import { useStore, useCharacter, useActivePersona } from '../lib/store.jsx';
 import { fillNames, formatCount } from '../lib/format.js';
+import { chatsLabel } from '../lib/counts.js';
 
 const VIS = { public: [Globe, 'Public'], unlisted: [Link2, 'Unlisted'], private: [Lock, 'Private'] };
 
@@ -39,7 +40,7 @@ export default function CharacterProfileModal({ characterId, onClose }) {
                   </a>
                 )}
                 <span>·</span>
-                <MessageSquare size={13} /> {formatCount(character.interactions)} chats
+                <MessageSquare size={13} /> {chatsLabel(character.interactions)}
               </p>
               {character.basedOn && (
                 <p className="profile-meta">

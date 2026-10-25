@@ -120,3 +120,6 @@
   font-size: 1.9rem;
   letter-spacing: -0.03em;
 }
+.tile-stat.new {
+  letter-spacing: 0.02em;
+}
