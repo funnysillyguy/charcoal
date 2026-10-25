@@ -3,7 +3,7 @@ import { ChevronDown, ImagePlus, SendHorizontal, Square, X, AlertTriangle, KeyRo
 import HelpWriteIcon from '../HelpWriteIcon.jsx';
 import { Markdown } from '../../lib/markdown.jsx';
 import { suggestReplies } from '../../lib/assist.js';
-import { consume, estimateTokens, useFuel } from '../../lib/fuel.js';
+import { consume, useFuel } from '../../lib/fuel.js';
 import PersonaPicker from './PersonaPicker.jsx';
 import { useUI } from '../ui.jsx';
 import { useSettings, useProvider, useStore, useActivePersona } from '../../lib/store.jsx';
@@ -39,6 +39,8 @@ const ChatInput = forwardRef(function ChatInput({ character, busy, onSend, onSto
     setHelper((h) => ({ ...(h || {}), loading: true, error: '', improving }));
     try {
       const res = await suggestReplies({ settings, character, persona, chat, draft: text, signal: ctl.signal });
+      // Every suggestion the AI writes counts toward the break, same as every reply draft (3 ideas = 3).
+      if (!res.offline) consume(res.options?.length || 3);
       setHelper({ loading: false, options: res.options, improving, offline: !!res.offline });
     } catch (e) {
       if (e?.name === 'AbortError') return;

@@ -12,6 +12,9 @@ const LENGTH_RULES = {
 // Upper bounds, not targets. The length rule in the prompt does the real shaping.
 const MAX_TOKENS = { 1: 320, 2: 700, 3: 1400 };
 
+// Code (Canvas) replies get DeepSeek's full per-request ceiling: 384K tokens, i.e. no practical limit.
+export const CODE_MAX_TOKENS = 393_216;
+
 // History budget in characters (~4 chars/token). V4.1-Flash has a 1M context,
 // but long RP histories get expensive and slower; this keeps requests lean.
 const HISTORY_CHAR_BUDGET = 60_000;
@@ -255,8 +258,8 @@ export async function buildRequest({ character, persona, chat, uptoIndex, isSwip
     body.max_tokens += 2048; // reasoning tokens count against max_tokens
   }
   if (codeAsked) {
-    // A whole page of code. Light thinking so the page starts sooner and the budget goes to the code.
-    body.max_tokens = 16000;
+    // A whole page of code, as long as it needs. Light thinking so the page starts sooner.
+    body.max_tokens = CODE_MAX_TOKENS;
     if (settings.thinking) body.reasoning_effort = 'low';
   }
   return { body, meta: { temperature, model: settings.model, thinking: !!settings.thinking } };

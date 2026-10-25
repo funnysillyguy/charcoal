@@ -33,7 +33,7 @@ export function useChatEngine(character) {
   /** Stream one draft into its variant slot. Resolves when that draft finishes, fails or is stopped. */
   const runOne = useCallback(
     async ({ messageId, variantId, kind, signal }) => {
-      consume(1); // the break comes every 100 replies (swipes and regenerations count)
+      consume(1); // one per draft: 3 parallel drafts = 3, every swipe/regeneration/retry = 1. Break every 100.
       let content = '';
       let reasoning = '';
       let timer = null;
