@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Menu, Plus, Search, Settings, X } from 'lucide-react';
+import { MenuDot } from '../NotificationsPanel.jsx';
 import { useUI } from '../ui.jsx';
 import { FuelGauge } from '../Fuel.jsx';
 import { useActivePersona, useProvider } from '../../lib/store.jsx';
@@ -48,6 +49,7 @@ export default function Navbar({ query, onQuery }) {
     <header className="topbar">
       <button type="button" className="icon-btn nav-menu" onClick={ui.openDrawer} aria-label="Open menu">
         <Menu size={22} />
+        <MenuDot />
       </button>
       <div className="welcome">
         <span className="welcome-sub">Welcome back,</span>

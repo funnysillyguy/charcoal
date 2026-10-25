@@ -5,6 +5,8 @@ import ChatWindow from './components/Chat/ChatWindow.jsx';
 import SettingsModal from './components/SettingsModal.jsx';
 import AccountModal from './components/AccountModal.jsx';
 import OwnKeyGuide from './components/OwnKeyGuide.jsx';
+import NotificationsPanel from './components/NotificationsPanel.jsx';
+import { useSocial } from './lib/social.js';
 import { useCloudSync } from './lib/sync.js';
 import CharacterCreator from './pages/CharacterCreator.jsx';
 import CharacterProfileModal from './components/CharacterProfileModal.jsx';
@@ -19,6 +21,9 @@ function Shell() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notice, setNotice] = useState(null); // top banner: { id, text }
+  useSocial();
   useCloudSync();
   const [creator, setCreator] = useState(null); // null | { character?, remix?, name? }
   const [profileId, setProfileId] = useState(null);
@@ -68,6 +73,15 @@ function Shell() {
         setGuideOpen(true);
         setDrawer(false);
       },
+      openNotifications: () => {
+        setNotifOpen(true);
+        setDrawer(false);
+      },
+      notice: (text) => {
+        const id = Date.now();
+        setNotice({ id, text });
+        setTimeout(() => setNotice((n) => (n?.id === id ? null : n)), 3200);
+      },
       // Phones: slide-in drawer. Desktop: re-open a collapsed sidebar.
       openDrawer: () => {
         if (window.matchMedia?.('(max-width: 900px)').matches) setDrawer(true);
@@ -113,6 +127,13 @@ function Shell() {
       <RefuelOverlay />
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} onSaved={() => push('Settings saved', 'ok')} />
       <AccountModal open={accountOpen} onClose={() => setAccountOpen(false)} />
+      <NotificationsPanel open={notifOpen} onClose={() => setNotifOpen(false)} onSignIn={() => { setNotifOpen(false); setAccountOpen(true); }} />
+      {notice && (
+        <div className="top-notice" key={notice.id} role="status">
+          <span className="top-notice-heart">🧡</span>
+          {notice.text}
+        </div>
+      )}
       <OwnKeyGuide open={guideOpen} onClose={() => setGuideOpen(false)} onOpenSettings={() => setSettingsOpen(true)} />
       <ToastStack toasts={toasts} />
     </UIContext.Provider>

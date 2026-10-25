@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
-import { ChevronsLeft, Cloud, Compass, MessageSquareDashed, MoreHorizontal, Plus, Search, Settings, Trash2, UserRound, X } from 'lucide-react';
+import { ChevronsLeft, Cloud, Compass, Megaphone, MessageSquareDashed, MoreHorizontal, Plus, Search, Settings, Trash2, UserRound, X } from 'lucide-react';
 import { CLOUD_ENABLED, useSession } from '../../lib/cloud.js';
 import { useSyncStatus } from '../../lib/sync.js';
+import { useSocial, badgeText } from '../../lib/social.js';
 import Avatar from '../Avatar.jsx';
 import PersonaPicker from '../Chat/PersonaPicker.jsx';
 import { useUI, usePopover, ConfirmDialog } from '../ui.jsx';
@@ -63,6 +64,7 @@ export default function Sidebar({ open, onClose, onCollapse, activeId, view }) {
   const status = useProvider();
   const session = useSession();
   const sync = useSyncStatus();
+  const { unread } = useSocial();
   const [q, setQ] = useState('');
   const [confirm, setConfirm] = useState(null);
 
@@ -124,6 +126,15 @@ export default function Sidebar({ open, onClose, onCollapse, activeId, view }) {
             Settings
             <span className={`status-dot ${status.mode}`} style={{ marginLeft: 'auto' }} title={`${status.label} · ${status.detail}`} />
           </button>
+          {CLOUD_ENABLED && (
+            <button type="button" className="nav-item" onClick={ui.openNotifications} aria-label={unread ? `Notifications, ${unread} unread` : 'Notifications'}>
+              <span className="nav-icon plain notif-nav-icon">
+                <Megaphone size={17} />
+                {unread > 0 && <span className="notif-badge">{badgeText(unread)}</span>}
+              </span>
+              Notifications
+            </button>
+          )}
           {CLOUD_ENABLED && (
             <button type="button" className="nav-item" onClick={ui.openAccount}>
               <span className="nav-icon plain">

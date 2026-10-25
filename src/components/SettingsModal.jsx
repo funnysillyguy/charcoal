@@ -3,6 +3,7 @@ import { CheckCircle2, Eye, EyeOff, Loader, PlugZap, ShieldAlert, Sparkles, User
 import { Modal, useUI } from './ui.jsx';
 import { SHARED_BASE, SHARED_MODEL, setSharedKey, useShared, refreshShared } from '../lib/endpoint.js';
 import { CLOUD_ENABLED, CLOUD_KEY, accessToken } from '../lib/cloud.js';
+import { PoweredBy } from './ThankButton.jsx';
 import { useSettings, useProvider } from '../lib/store.jsx';
 import { getSample } from '../lib/hostAI.js';
 import { listModels } from '../lib/deepseek.js';
@@ -213,6 +214,7 @@ export default function SettingsModal({ open, onClose, onSaved }) {
           ) : shared.enabled ? (
             <>
               <p>{settings.apiKey ? 'Available, but your own key below takes priority.' : 'You’re on the built-in AI (DeepSeek Flash). Nothing to set up.'}</p>
+              <PoweredBy />
               {limit > 0 && (
                 <div className="builtin-usage">
                   <span>Today: {used.toLocaleString()} / {limit.toLocaleString()} tokens</span>

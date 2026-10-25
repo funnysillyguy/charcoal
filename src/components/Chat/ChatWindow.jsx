@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ArrowDown, Download, Drama, Eraser, ImagePlus, KeyRound, Menu, MoreHorizontal, Trash2, UserRound, X } from 'lucide-react';
+import { MenuDot } from '../NotificationsPanel.jsx';
 import Avatar from '../Avatar.jsx';
 import ChatMessage from './ChatMessage.jsx';
 import ChatInput from './ChatInput.jsx';
@@ -267,6 +268,7 @@ export default function ChatWindow({ characterId }) {
       <header className="chat-head">
         <button type="button" className="icon-btn nav-menu" onClick={ui.openDrawer} aria-label="Open menu">
           <Menu size={22} />
+          <MenuDot />
         </button>
         <button type="button" className="chat-who" onClick={() => ui.openProfile(character.id)}>
           <Avatar avatar={character.avatar} name={character.name} size={40} round />
