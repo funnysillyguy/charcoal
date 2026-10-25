@@ -5,8 +5,10 @@ import { generateReply } from './generate.js';
 import { uid, saveImage } from './images.js';
 import { ApiError } from './deepseek.js';
 import { MAX_SWIPES } from './settings.js';
-import { consume, isRefueling } from './fuel.js';
+import { consume, isRefueling, CODE_COST } from './fuel.js';
 import { recordChatStart } from './counts.js';
+import { isAssistantId } from './assistant.js';
+import { saveFileText } from './files.js';
 
 const FLUSH_MS = 40; // batch token appends so long replies don't re-render per token
 
@@ -57,10 +59,16 @@ export function useChatEngine(character) {
           kind,
           settings: live.current.settings,
           signal,
+          getState,
         });
         for await (const ev of stream) {
           if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
           if (ev.type === 'meta') dispatch({ type: 'msg/meta', charId, messageId, variantId, meta: ev.meta });
+          else if (ev.type === 'activity') {
+            clearTimeout(timer);
+            flush();
+            dispatch({ type: 'msg/activity', charId, messageId, variantId, activity: ev.activity });
+          }
           else if (ev.type === 'content' || ev.type === 'reasoning') {
             if (ev.type === 'content') content += ev.text;
             else reasoning += ev.text;
@@ -75,6 +83,8 @@ export function useChatEngine(character) {
         void reported;
         const msg = getState().chats[charId]?.messages.find((m) => m.id === messageId);
         const text = msg?.variants.find((v) => v.id === variantId)?.text || '';
+        // A reply with code costs 3 toward the break (1 already taken at the start).
+        if (text.includes('```')) consume(CODE_COST - 1);
         if (text.trim()) {
           dispatch({ type: 'msg/finish', charId, messageId, variantId, status: 'done', finishReason });
         } else {
@@ -141,12 +151,13 @@ export function useChatEngine(character) {
 
   /** Send a user message (text and/or prepared images); the character answers with N parallel drafts. */
   const send = useCallback(
-    async (text, images = []) => {
+    async (text, images = [], files = []) => {
       if (!character || controllerRef.current || isRefueling()) return false;
       const clean = String(text || '').replace(/\s+$/, '');
-      if (!clean.trim() && !images.length) return false;
+      if (!clean.trim() && !images.length && !files.length) return false;
       for (const img of images) await saveImage(img.id, img.dataUrl);
-      recordChatStart(charId);
+      for (const f of files) await saveFileText(f.id, f.text);
+      if (!isAssistantId(charId)) recordChatStart(charId); // counts are per character
       dispatch({
         type: 'msg/user',
         charId,
@@ -155,6 +166,7 @@ export function useChatEngine(character) {
           role: 'user',
           text: clean,
           images: images.map(({ id, mime, name, width, height, bytes }) => ({ id, mime, name, width, height, bytes })),
+          ...(files.length ? { files: files.map(({ id, name, mime, bytes, chars, pages, truncated }) => ({ id, name, mime, bytes, chars, pages, truncated })) } : {}),
           createdAt: Date.now(),
         },
       });

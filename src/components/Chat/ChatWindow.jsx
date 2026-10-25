@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ArrowDown, Download, Drama, Eraser, ImagePlus, KeyRound, Menu, MoreHorizontal, Trash2, UserRound, X } from '../icons.jsx';
+import { ArrowDown, Download, Drama, Eraser, ImagePlus, KeyRound, Menu, MoreHorizontal, NotePencil, Paperclip, Trash2, UserRound, X } from '../icons.jsx';
+import { isAssistantId } from '../../lib/assistant.js';
 import { MenuDot } from '../NotificationsPanel.jsx';
 import Avatar from '../Avatar.jsx';
 import ChatMessage from './ChatMessage.jsx';
@@ -12,7 +13,7 @@ import { useChatEngine } from '../../lib/useChatEngine.js';
 import { imageFilesFrom, deleteImages } from '../../lib/images.js';
 import { firstName } from '../../lib/format.js';
 import { registerSender } from '../../lib/canvas.js';
-import { MOOD_PRESETS } from '../../data/characters.js';
+import { MOOD_PRESETS, SEED_CHARACTERS } from '../../data/characters.js';
 
 function MoodPicker({ chat, character, onChange }) {
   const pop = usePopover();
@@ -88,6 +89,40 @@ function MoodPicker({ chat, character, onChange }) {
   );
 }
 
+/** Charcoal Chat's empty state: what it can do, as one-tap starters. */
+function AssistantStart({ onPick }) {
+  const { state } = useStore();
+  const recent = Object.entries(state.chats)
+    .filter(([id, c]) => !isAssistantId(id) && c.messages.some((m) => m.role === 'user'))
+    .sort((a, b) => b[1].updatedAt - a[1].updatedAt)[0];
+  const recentName = recent ? firstNameOf(recent[0], state) : null;
+  const ideas = [
+    recentName ? `What did ${recentName} and I talk about last time?` : 'What can you do with my roleplay chats?',
+    'What’s in the news today?',
+    'Build me a landing page for a tiny bakery',
+    'Plot compound interest on $5,000 at 7% for 30 years',
+  ];
+  return (
+    <div className="asst-start">
+      <span className="logo-mark asst-start-mark" aria-hidden="true" />
+      <h1>What’s on your mind?</h1>
+      <p>Ask anything. It can look back through your chats when you ask, search the web, read files and write code you can watch run.</p>
+      <div className="asst-ideas">
+        {ideas.map((t) => (
+          <button key={t} type="button" className="asst-idea" onClick={() => onPick(t)}>
+            {t}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function firstNameOf(id, state) {
+  const c = SEED_CHARACTERS.find((x) => x.id === id) || state.customCharacters.find((x) => x.id === id);
+  return c?.name?.split(' ')[0] || null;
+}
+
 function OptionsMenu({ items }) {
   const pop = usePopover();
   return (
@@ -145,6 +180,7 @@ export default function ChatWindow({ characterId }) {
 
   const messages = chat?.messages || [];
   const lastMsg = messages[messages.length - 1];
+  const isAsst = isAssistantId(characterId);
 
   // Stick to the bottom while text streams, unless the reader scrolled up.
   const onScroll = () => {
@@ -214,7 +250,7 @@ export default function ChatWindow({ characterId }) {
     e.preventDefault();
     dragDepth.current = 0;
     setDragging(false);
-    const files = imageFilesFrom(e.dataTransfer);
+    const files = isAsst ? [...(e.dataTransfer?.files || [])] : imageFilesFrom(e.dataTransfer);
     if (files.length) inputRef.current?.addFiles(files);
   };
 
@@ -229,7 +265,30 @@ export default function ChatWindow({ characterId }) {
       },
     });
 
-  const menuItems = [
+  const menuItems = isAsst
+    ? [
+        { label: 'New chat', icon: NotePencil, onClick: () => ui.openAssistant() },
+        { label: 'Export chat', icon: Download, onClick: () => setExportOpen(true) },
+        { label: 'Settings', icon: KeyRound, onClick: ui.openSettings },
+        '-',
+        {
+          label: 'Delete chat',
+          icon: Trash2,
+          danger: true,
+          onClick: () =>
+            setConfirm({
+              title: 'Delete this chat?',
+              body: 'All messages and attachments in it are removed from this browser.',
+              confirmLabel: 'Delete',
+              run: () => {
+                engine.stop();
+                dispatch({ type: 'chat/delete', charId: character.id });
+                ui.goHome();
+              },
+            }),
+        },
+      ]
+    : [
     { label: 'View profile', icon: UserRound, onClick: () => ui.openProfile(character.id) },
     { label: 'Export chat', icon: Download, onClick: () => setExportOpen(true) },
     { label: 'Settings', icon: KeyRound, onClick: ui.openSettings },
@@ -274,30 +333,48 @@ export default function ChatWindow({ characterId }) {
           <Menu size={22} />
           <MenuDot />
         </button>
-        <button type="button" className="chat-who" onClick={() => ui.openProfile(character.id)}>
+        <button type="button" className="chat-who" onClick={() => !isAsst && ui.openProfile(character.id)}>
           <Avatar avatar={character.avatar} name={character.name} size={40} round />
           <span className="chat-who-text">
-            <span className="chat-name">{character.name}</span>
+            <span className="chat-name">{isAsst ? chat.title || 'New chat' : character.name}</span>
             <span className={`chat-sub ${engine.busy ? 'typing-text' : ''}`}>
-              {engine.busy ? `${firstName(character.name)} is typing…` : chat.mood ? `Mood: ${chat.mood}` : `By @${character.creator}`}
+              {isAsst
+                ? engine.busy
+                  ? 'Charcoal is working…'
+                  : 'Charcoal Chat · DeepSeek'
+                : engine.busy
+                  ? `${firstName(character.name)} is typing…`
+                  : chat.mood
+                    ? `Mood: ${chat.mood}`
+                    : `By @${character.creator}`}
             </span>
           </span>
         </button>
         <div className="chat-head-actions">
           <FuelGauge />
-          <MoodPicker chat={chat} character={character} onChange={(mood) => dispatch({ type: 'chat/mood', charId: character.id, mood })} />
+          {isAsst ? (
+            <button type="button" className="circle-btn" onClick={() => ui.openAssistant()} aria-label="New chat" title="New chat">
+              <NotePencil size={18} />
+            </button>
+          ) : (
+            <MoodPicker chat={chat} character={character} onChange={(mood) => dispatch({ type: 'chat/mood', charId: character.id, mood })} />
+          )}
           <OptionsMenu items={menuItems} />
         </div>
       </header>
 
       <div className="chat-scroll" ref={scrollRef} onScroll={onScroll}>
         <div className="chat-column">
-          <div className="chat-intro">
-            <Avatar avatar={character.avatar} name={character.name} size={84} round />
-            <h1>{character.name}</h1>
-            <p>{character.tagline}</p>
-            <span className="chat-intro-meta">By @{character.creator}</span>
-          </div>
+          {isAsst ? (
+            !messages.length && <AssistantStart onPick={(t) => engine.send(t)} />
+          ) : (
+            <div className="chat-intro">
+              <Avatar avatar={character.avatar} name={character.name} size={84} round />
+              <h1>{character.name}</h1>
+              <p>{character.tagline}</p>
+              <span className="chat-intro-meta">By @{character.creator}</span>
+            </div>
+          )}
 
           {messages.map((m, i) => (
             <ChatMessage
@@ -343,8 +420,8 @@ export default function ChatWindow({ characterId }) {
 
       {dragging && (
         <div className="drop-overlay">
-          <ImagePlus size={28} />
-          <span>Drop images to attach</span>
+          {isAsst ? <Paperclip size={28} /> : <ImagePlus size={28} />}
+          <span>{isAsst ? 'Drop files or images to attach' : 'Drop images to attach'}</span>
         </div>
       )}
 

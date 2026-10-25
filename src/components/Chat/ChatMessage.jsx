@@ -14,6 +14,14 @@ import {
   Trash2,
   Volume2,
   VolumeX,
+  ListBullets,
+  Search,
+  BookOpen,
+  Globe,
+  LinkSimple,
+  Loader,
+  ExternalLink,
+  FileText,
 } from '../icons.jsx';
 import Avatar from '../Avatar.jsx';
 import SwipeController from './SwipeController.jsx';
@@ -21,7 +29,7 @@ import { useSwipeGesture } from './useSwipeGesture.js';
 import { usePopover, useUI } from '../ui.jsx';
 import { Markdown } from '../../lib/markdown.jsx';
 import { useImageUrl } from '../../lib/images.js';
-import { fillNames, resetInfo } from '../../lib/format.js';
+import { fillNames, formatBytes, resetInfo } from '../../lib/format.js';
 import { refreshShared } from '../../lib/endpoint.js';
 import { MAX_SWIPES } from '../../lib/settings.js';
 import { useSettings } from '../../lib/store.jsx';
@@ -32,7 +40,7 @@ import { BlockContext, autoOpenCanvas, cutProse, parseFences, kindOf, proseLengt
 // ahead (a long one), it types faster until it catches up.
 const TYPE_CPS = 57;
 
-function useTypewriter(len, startLive) {
+function useTypewriter(len, startLive, speed = TYPE_CPS) {
   const [shown, setShown] = useState(startLive ? 0 : len);
   const st = useRef({ acc: startLive ? 0 : len, raf: 0, last: 0, target: len });
   st.current.target = len;
@@ -43,7 +51,7 @@ function useTypewriter(len, startLive) {
     s.last = performance.now();
     const tick = (now) => {
       const behind = s.target - s.acc;
-      const cps = behind > 900 ? TYPE_CPS * 2.5 : TYPE_CPS;
+      const cps = behind > 900 ? speed * 2.5 : speed;
       s.acc = Math.min(s.target, s.acc + ((now - s.last) / 1000) * cps);
       s.last = now;
       setShown(Math.floor(s.acc));
@@ -57,10 +65,55 @@ function useTypewriter(len, startLive) {
 
 /** One draft's text, typed out while it's live. Keyed by variant so each draft types on its own.
  *  Only prose is typed: a code block appears whole (as a Canvas card) when the typing reaches it. */
-function TypedReply({ text, live }) {
+function TypedReply({ text, live, cps }) {
   const total = proseLength(text);
-  const shown = useTypewriter(total, live);
+  const shown = useTypewriter(total, live, cps);
   return <Markdown text={cutProse(text, shown)} streaming={live || shown < total} />;
+}
+
+const ACT_ICONS = { list: ListBullets, search: Search, book: BookOpen, globe: Globe, link: LinkSimple };
+
+/** What Charcoal Chat looked at while answering: your chats, web searches, pages. */
+function ActivityList({ items }) {
+  if (!items?.length) return null;
+  return (
+    <ul className="act-list" aria-label="Steps">
+      {items.map((a) => {
+        const Icon = ACT_ICONS[a.icon] || Search;
+        return (
+          <li key={a.id} className={`act ${a.status}`}>
+            {a.status === 'running' ? <Loader size={13} className="spin" /> : <Icon size={13} />}
+            <span className="act-text">{a.text}</span>
+            {a.detail && <span className="act-detail">{a.detail}</span>}
+            {a.url && a.status !== 'running' && (
+              <a className="act-link" href={a.url} target="_blank" rel="noreferrer noopener" aria-label="Open page">
+                <ExternalLink size={12} />
+              </a>
+            )}
+            {a.status === 'error' && a.error && <span className="act-err">{a.error}</span>}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+function FileChips({ files }) {
+  if (!files?.length) return null;
+  return (
+    <div className="msg-files">
+      {files.map((f) => (
+        <span key={f.id} className="file-chip" title={f.name}>
+          <FileText size={15} />
+          <span className="file-chip-name">{f.name}</span>
+          <span className="file-chip-meta">
+            {f.pages ? `${f.pages} page${f.pages > 1 ? 's' : ''} · ` : ''}
+            {formatBytes(f.bytes)}
+          </span>
+        </span>
+      ))}
+    </div>
+  );
 }
 
 function TypingDots() {
@@ -295,6 +348,7 @@ function ChatMessage({
               ))}
             </div>
           )}
+          <FileChips files={message.files} />
           {text && <Markdown text={text} />}
         </div>
       </article>
@@ -350,14 +404,23 @@ function ChatMessage({
         {variant?.status === 'error' ? (
           <ErrorCard error={variant.error} busy={busy} onRetry={() => onRetry(variant.id)} onSettings={onOpenSettings} />
         ) : pending ? (
-          <div className="msg-pending">
-            <TypingDots />
-            {thinking && <span className="msg-thinking">thinking…</span>}
-          </div>
+          <>
+            <ActivityList items={variant?.activity} />
+            <div className="msg-pending">
+              <TypingDots />
+              {thinking && <span className="msg-thinking">thinking…</span>}
+            </div>
+          </>
         ) : (
           <BlockContext.Provider value={blockCtx}>
+            <ActivityList items={variant?.activity} />
             {typewriter ? (
-              <TypedReply key={variant?.id} text={text} live={liveAtMount.current[variant?.id] ?? false} />
+              <TypedReply
+                key={variant?.id}
+                text={text}
+                live={liveAtMount.current[variant?.id] ?? false}
+                cps={character.kind === 'assistant' ? 240 : TYPE_CPS /* Charcoal Chat answers run long: type faster */}
+              />
             ) : (
               <Markdown key={variant?.id} text={text} streaming={streaming} />
             )}

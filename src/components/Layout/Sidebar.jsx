@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { ChevronsLeft, Cloud, Compass, Megaphone, MessageSquareDashed, MoreHorizontal, Plus, Search, Settings, Trash2, UserRound, X } from '../icons.jsx';
+import { ChevronsLeft, Cloud, Compass, Megaphone, MessageCircle, MessageSquareDashed, MoreHorizontal, Plus, Search, Settings, Trash2, UserRound, X } from '../icons.jsx';
+import { assistantCharacter, isAssistantId } from '../../lib/assistant.js';
 import { CLOUD_ENABLED, useSession } from '../../lib/cloud.js';
 import { useSyncStatus } from '../../lib/sync.js';
 import { useSocial, badgeText } from '../../lib/social.js';
@@ -27,17 +28,19 @@ function RowMenu({ character, onDelete }) {
       </button>
       {pop.open && (
         <div className="popover menu" role="menu">
-          <button
-            type="button"
-            role="menuitem"
-            className="menu-item"
-            onClick={() => {
-              pop.setOpen(false);
-              ui.openProfile(character.id);
-            }}
-          >
-            <UserRound size={16} /> View profile
-          </button>
+          {character.kind !== 'assistant' && (
+            <button
+              type="button"
+              role="menuitem"
+              className="menu-item"
+              onClick={() => {
+                pop.setOpen(false);
+                ui.openProfile(character.id);
+              }}
+            >
+              <UserRound size={16} /> View profile
+            </button>
+          )}
           <button
             type="button"
             role="menuitem"
@@ -71,9 +74,14 @@ export default function Sidebar({ open, onClose, onCollapse, activeId, view }) {
   // Chats grouped like c.ai: Today / Yesterday / This Week / Last Week / Older
   const groups = useMemo(() => {
     const term = q.trim().toLowerCase();
-    const rows = Object.values(state.chats)
-      .map((chat) => ({ chat, character: characters.find((c) => c.id === chat.characterId) }))
-      .filter((r) => r.character && (!term || r.character.name.toLowerCase().includes(term)))
+    const rows = Object.entries(state.chats)
+      .map(([id, chat]) =>
+        isAssistantId(id)
+          ? { chat, character: assistantCharacter(id, chat), label: chat.title || 'New chat', skip: !chat.messages.length }
+          : { chat, character: characters.find((c) => c.id === chat.characterId) },
+      )
+      .map((r) => ({ ...r, label: r.label || r.character?.name }))
+      .filter((r) => r.character && !r.skip && (!term || r.label.toLowerCase().includes(term)))
       .sort((a, b) => b.chat.updatedAt - a.chat.updatedAt);
     const start = new Date();
     start.setHours(0, 0, 0, 0);
@@ -118,6 +126,12 @@ export default function Sidebar({ open, onClose, onCollapse, activeId, view }) {
               <Compass size={15} />
             </span>
             Discover
+          </button>
+          <button type="button" className={`nav-item ${isAssistantId(activeId) ? 'active' : ''}`} onClick={() => ui.openAssistant()}>
+            <span className="nav-icon plain">
+              <MessageCircle size={17} />
+            </span>
+            Chat
           </button>
           <button type="button" className="nav-item" onClick={ui.openSettings}>
             <span className="nav-icon plain">
@@ -171,17 +185,21 @@ export default function Sidebar({ open, onClose, onCollapse, activeId, view }) {
                 <div key={g.label} className="recent-group">
                   <div className="recent-label">{g.label}</div>
                   <ul className="recent-list">
-                    {g.rows.map(({ chat, character }) => (
+                    {g.rows.map(({ chat, character, label }) => (
                       <li key={chat.characterId} className={`recent-row ${activeId === character.id ? 'active' : ''}`}>
-                        <button type="button" className="recent" onClick={() => ui.openChat(character)}>
+                        <button
+                          type="button"
+                          className="recent"
+                          onClick={() => (character.kind === 'assistant' ? ui.openAssistant(character.id) : ui.openChat(character))}
+                        >
                           <Avatar avatar={character.avatar} name={character.name} size={38} round />
-                          <span className="recent-name">{character.name}</span>
+                          <span className="recent-name">{label}</span>
                         </button>
                         <RowMenu
                           character={character}
                           onDelete={() =>
                             setConfirm({
-                              title: `Delete your chat with ${character.name}?`,
+                              title: character.kind === 'assistant' ? `Delete “${label}”?` : `Delete your chat with ${character.name}?`,
                               body: 'All messages, swipes and images in this chat are removed from this browser.',
                               run: () => {
                                 dispatch({ type: 'chat/delete', charId: character.id });

@@ -9,6 +9,8 @@ import { loadSettings, saveSettings, providerStatus, SANDBOXED } from './setting
 import { getSample } from './hostAI.js';
 import { useShared } from './endpoint.js';
 import { useCounts } from './counts.js';
+import { assistantCharacter, isAssistantId, threadTitle } from './assistant.js';
+import { deleteFiles } from './files.js';
 
 const STATE_KEY = 'state:v1';
 
@@ -45,6 +47,8 @@ function greetingMessage(character) {
 
 function newChat(character) {
   const now = Date.now();
+  // Charcoal Chat threads start empty and get a title from the first message.
+  if (character.kind === 'assistant') return { characterId: character.id, kind: 'assistant', title: '', opts: {}, messages: [], createdAt: now, updatedAt: now };
   return { characterId: character.id, messages: [greetingMessage(character)], mood: '', createdAt: now, updatedAt: now };
 }
 
@@ -81,6 +85,9 @@ const pendingVariant = (id) => ({ id, text: '', status: 'pending', meta: null })
 
 function imageIdsOf(chat) {
   return (chat?.messages || []).flatMap((m) => (m.images || []).map((i) => i.id));
+}
+function fileIdsOf(chat) {
+  return (chat?.messages || []).flatMap((m) => (m.files || []).map((f) => f.id));
 }
 
 /** Messages left mid-stream when the tab closed become "stopped" (or disappear if empty). */
@@ -134,7 +141,33 @@ function reducer(state, action) {
       return updateChat(state, action.charId, (chat) => ({ ...chat, mood: action.mood }), false);
 
     case 'msg/user':
-      return updateChat(state, action.charId, (chat) => ({ ...chat, messages: [...chat.messages, action.message] }));
+      return updateChat(state, action.charId, (chat) => ({
+        ...chat,
+        title: isAssistantId(action.charId) && !chat.title ? threadTitle(action.message.text || action.message.files?.[0]?.name) : chat.title,
+        messages: [...chat.messages, action.message],
+      }));
+
+    case 'chat/opts': // Charcoal Chat: per-thread web / thinking switches
+      return updateChat(state, action.charId, (chat) => ({ ...chat, opts: { ...(chat.opts || {}), ...action.opts } }), false);
+
+    case 'chat/rename':
+      return updateChat(state, action.charId, (chat) => ({ ...chat, title: String(action.title || '').slice(0, 80) }), false);
+
+    case 'msg/activity': // a tool step in a Charcoal Chat reply (searched chats, read a page...)
+      return updateChat(
+        state,
+        action.charId,
+        (chat) =>
+          updateMessage(chat, action.messageId, (m) =>
+            updateVariant(m, action.variantId, (v) => {
+              const list = v.activity || [];
+              const i = list.findIndex((a) => a.id === action.activity.id);
+              const activity = i < 0 ? [...list, action.activity] : list.map((a, k) => (k === i ? { ...a, ...action.activity } : a));
+              return { ...v, activity };
+            }),
+          ),
+        false,
+      );
 
     case 'msg/char': // a new character turn with N parallel drafts
       return updateChat(state, action.charId, (chat) => ({
@@ -369,6 +402,8 @@ function createStore() {
         const id = action.charId || action.id || action.character?.id;
         const ids = imageIdsOf(state.chats[id]);
         if (ids.length) deleteImages(ids);
+        const files = fileIdsOf(state.chats[id]);
+        if (files.length) deleteFiles(files);
       }
       const next = reducer(state, action);
       if (next === state) return;
@@ -454,6 +489,8 @@ export function useCharacters() {
 
 export function useCharacter(id) {
   const all = useCharacters();
+  const { state } = useStore();
+  if (isAssistantId(id)) return state.chats[id] ? assistantCharacter(id, state.chats[id]) : null;
   return all.find((c) => c.id === id) || null;
 }
 

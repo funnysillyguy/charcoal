@@ -232,6 +232,7 @@ for (const k of ['log', 'info', 'debug', 'warn', 'error']) console[k] = (...a) =
 onmessage = async (e) => {
   try {
     const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
+    self.files = Object.fromEntries((e.data.files || []).map((f) => [f.name, f.text])); // attached files by name
     const r = await new AsyncFunction(e.data.code)();
     if (r !== undefined) send('out', show([r]) + '\\n');
   } catch (err) { send('err', (err && err.stack) || String(err)); }
@@ -249,6 +250,12 @@ onmessage = async (e) => {
     py.setStdout({ batched: (s) => { if (!/building the font cache/i.test(s)) send('out', s + '\\n'); } });
     py.setStderr({ batched: (s) => { if (!/building the font cache/i.test(s)) send('out', s + '\\n'); } });
     const code = e.data.code;
+    const files = e.data.files || [];
+    if (files.length) {
+      const dir = py.FS.cwd() + '/data'; // relative paths like data/sales.csv resolve here
+      try { py.FS.mkdirTree(dir); } catch (x) { /* already there */ }
+      for (const f of files) py.FS.writeFile(dir + '/' + f.name, f.text);
+    }
     send('status', 'Loading libraries…');
     await py.loadPackagesFromImports(code);
     if (/matplotlib/.test(code)) await py.runPythonAsync("import matplotlib\\nmatplotlib.use('AGG')");
@@ -270,7 +277,10 @@ except Exception:
 _out
 \`);
     for (const f of figs.toJs()) postMessage({ t: 'img', data: f });
-  } catch (err) { send('err', (err && err.message) || String(err)); }
+  } catch (err) {
+    const msg = (err && err.message) || (err && err.errno !== undefined ? 'File system error ' + err.errno + (err.code ? ' (' + err.code + ')' : '') : '');
+    send('err', msg || (() => { try { return JSON.stringify(err); } catch (x) { return String(err); } })());
+  }
   postMessage({ t: 'done' });
 };`;
 
@@ -288,7 +298,7 @@ export function runnerDoc(lang) {
     catch(err){parent.postMessage({t:'err',text:'Could not start the sandbox: '+err},'*');parent.postMessage({t:'done'},'*');return;}
     w.onmessage=function(m){parent.postMessage(m.data,'*')};
     w.onerror=function(m){parent.postMessage({t:'err',text:String(m.message||'The sandbox stopped.')},'*');parent.postMessage({t:'done'},'*')};
-    w.postMessage({code:e.data.code});
+    w.postMessage({code:e.data.code,files:e.data.files||[]});
   });
   parent.postMessage({t:'ready'},'*');
 })();
@@ -304,7 +314,7 @@ export const lastResult = (lang, code) => results.get(`${lang}:${code}`) || null
  * Run code in an isolated frame: no same-origin access, no network (Python may fetch its own runtime
  * from the CDN), killed on timeout. onUpdate({ out, status, images, error, done }) fires as it goes.
  */
-export function runCode({ lang, code, onUpdate }) {
+export function runCode({ lang, code, files = [], onUpdate }) {
   const python = lang === 'python';
   const limit = python ? 150_000 : 20_000;
   const frame = document.createElement('iframe');
@@ -332,7 +342,7 @@ export function runCode({ lang, code, onUpdate }) {
   function onMsg(e) {
     if (e.source !== frame.contentWindow || !e.data) return;
     const d = e.data;
-    if (d.t === 'ready') frame.contentWindow.postMessage({ code }, '*');
+    if (d.t === 'ready') frame.contentWindow.postMessage({ code, files }, '*');
     else if (d.t === 'out') {
       if (res.out.length < MAX_OUT) res.out += String(d.text);
       else res.truncated = true;

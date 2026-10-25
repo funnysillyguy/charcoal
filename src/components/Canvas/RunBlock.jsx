@@ -1,8 +1,10 @@
 // A python / javascript block with a Run button. The code runs in an isolated frame (see canvas.js);
 // the output can be sent to the character so they can talk about the result.
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { Check, Copy, Loader, Play, Send, Square } from '../icons.jsx';
-import { canSendToChat, lastResult, runCode, runLang, sendToChat } from '../../lib/canvas.js';
+import { BlockContext, canSendToChat, lastResult, runCode, runLang, sendToChat } from '../../lib/canvas.js';
+import { chatFiles } from '../../lib/files.js';
+import { useStore } from '../../lib/store.jsx';
 import { highlight } from '../../lib/highlight.js';
 
 export default function RunBlock({ lang, code, closed }) {
@@ -12,14 +14,19 @@ export default function RunBlock({ lang, code, closed }) {
   const [copied, setCopied] = useState(false);
   const [sent, setSent] = useState(false);
   const job = useRef(null);
+  const ctx = useContext(BlockContext);
+  const { getState } = useStore();
   useEffect(() => () => job.current?.stop(), []);
 
-  const run = () => {
+  const run = async () => {
     setSent(false);
     setRunning(true);
+    // Files attached anywhere in this chat are readable by the code (Python: data/<name>, JS: files[name]).
+    const files = ctx ? await chatFiles(getState().chats[ctx.charId]) : [];
     job.current = runCode({
       lang: kind,
       code,
+      files,
       onUpdate: (r) => {
         setRes(r);
         if (r.done) setRunning(false);

@@ -15,6 +15,7 @@ const DEFAULT_UPSTREAM = "https://api.deepseek.com/v1";
 const ALLOWED_MODELS = ["deepseek-flash"];
 const USER_DAILY_TOKENS = 300_000; // output tokens per person per day (~$0.18 at $0.60/M)
 const GLOBAL_DAILY_TOKENS = 4_000_000; // whole site per day (~$2.40)
+const CODE_COST = 3; // replies with code count triple toward the daily limit
 const MAX_TOKENS_CAP = 393_216; // DeepSeek's own per-request ceiling: Canvas pages are never cut short. The daily cap bounds spend.
 
 const CORS = {
@@ -56,12 +57,14 @@ async function record(userId: string, tokens: number) {
   await admin.rpc("add_shared_usage", { p_user: userId, p_tokens: Math.max(0, Math.round(tokens)) });
 }
 
-/** Pass the SSE stream through untouched while watching for the final usage chunk. */
-function meter(body: ReadableStream<Uint8Array>, onDone: (tokens: number) => Promise<void>) {
+/** Pass the SSE stream through untouched while watching for the final usage chunk and for code. */
+function meter(body: ReadableStream<Uint8Array>, onDone: (tokens: number, hadCode: boolean) => Promise<void>) {
   const dec = new TextDecoder();
   let buf = "";
   let reported: number | null = null;
   let chars = 0;
+  let tail = ""; // last few characters of visible text, so a ``` split across chunks is still seen
+  let hadCode = false;
   const scan = (line: string) => {
     if (!line.startsWith("data:")) return;
     const payload = line.slice(5).trim();
@@ -71,6 +74,11 @@ function meter(body: ReadableStream<Uint8Array>, onDone: (tokens: number) => Pro
       if (j.usage?.completion_tokens != null) reported = Number(j.usage.completion_tokens);
       const d = j.choices?.[0]?.delta;
       if (d) chars += (d.content?.length ?? 0) + (d.reasoning_content?.length ?? 0);
+      if (d?.content && !hadCode) {
+        const seen = tail + d.content;
+        if (seen.includes("```")) hadCode = true;
+        tail = seen.slice(-2);
+      }
     } catch {
       /* partial or non-JSON line */
     }
@@ -86,7 +94,7 @@ function meter(body: ReadableStream<Uint8Array>, onDone: (tokens: number) => Pro
       },
       async flush() {
         if (buf) scan(buf);
-        await onDone(reported ?? Math.ceil(chars / 4));
+        await onDone(reported ?? Math.ceil(chars / 4), hadCode);
       },
     }),
   );
@@ -136,15 +144,19 @@ async function chat(req: Request) {
     return fail(up.status, message);
   }
 
+  // Coding costs triple: judged by the reply itself (it contains a code block), so it can't be dodged client-side.
+  const cost = (tokens: number, hadCode: boolean) => tokens * (hadCode ? CODE_COST : 1);
+
   if (stream && up.body) {
-    const metered = meter(up.body, (t) => record(user.id, t));
+    const metered = meter(up.body, (t, hadCode) => record(user.id, cost(t, hadCode)));
     return new Response(metered, {
       status: 200,
       headers: { ...CORS, "Content-Type": "text/event-stream", "Cache-Control": "no-cache" },
     });
   }
   const data = await up.json();
-  await record(user.id, Number(data?.usage?.completion_tokens ?? 0));
+  const text = String(data?.choices?.[0]?.message?.content ?? "");
+  await record(user.id, cost(Number(data?.usage?.completion_tokens ?? 0), text.includes("```")));
   return json(data);
 }
 

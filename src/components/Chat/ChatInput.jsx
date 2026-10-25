@@ -1,5 +1,7 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { ChevronDown, ImagePlus, SendHorizontal, Square, X, AlertTriangle, KeyRound, RefreshCw, Loader } from '../icons.jsx';
+import { ChevronDown, ImagePlus, SendHorizontal, Square, X, AlertTriangle, KeyRound, RefreshCw, Loader, Paperclip, Globe, Lightbulb, FileText } from '../icons.jsx';
+import { ACCEPT_ALL, MAX_ATTACHMENTS, prepareAttachment } from '../../lib/files.js';
+import { chatOpts } from '../../lib/assistant.js';
 import HelpWriteIcon from '../HelpWriteIcon.jsx';
 import { Markdown } from '../../lib/markdown.jsx';
 import { suggestReplies } from '../../lib/assist.js';
@@ -19,10 +21,14 @@ const ChatInput = forwardRef(function ChatInput({ character, busy, onSend, onSto
   const status = useProvider();
   const [text, setText] = useState('');
   const [images, setImages] = useState([]);
+  const [files, setFiles] = useState([]); // Charcoal Chat: text/code/data/PDF attachments
+  const isAsst = character.kind === 'assistant';
   const [processing, setProcessing] = useState(false);
   const taRef = useRef(null);
   const fileRef = useRef(null);
-  const { state } = useStore();
+  const { state, dispatch } = useStore();
+  const opts = isAsst ? chatOpts(state.chats[character.id], settings) : null;
+  const toggle = (key) => dispatch({ type: 'chat/opts', charId: character.id, opts: { [key]: !opts[key] } });
   const persona = useActivePersona();
   const fuel = useFuel();
   const [helper, setHelper] = useState(null);
@@ -63,6 +69,7 @@ const ChatInput = forwardRef(function ChatInput({ character, busy, onSend, onSto
       setText('');
     }
     setImages([]);
+    setFiles([]);
     setHelper(null);
   }, [draftKey]);
   useEffect(() => {
@@ -83,9 +90,31 @@ const ChatInput = forwardRef(function ChatInput({ character, busy, onSend, onSto
   }, [text]);
 
   const addFiles = useCallback(
-    async (files) => {
-      const list = [...files];
+    async (incoming) => {
+      const list = [...incoming];
       if (!list.length) return;
+      if (isAsst) {
+        // Charcoal Chat takes images and files (text, code, CSV/JSON, PDF).
+        const room = MAX_ATTACHMENTS - images.length - files.length;
+        if (room <= 0) {
+          ui.toast(`Up to ${MAX_ATTACHMENTS} attachments per message.`, 'error');
+          return;
+        }
+        setProcessing(true);
+        for (const f of list.slice(0, room)) {
+          try {
+            const a = await prepareAttachment(f);
+            if (a.kind === 'image') setImages((prev) => [...prev, a]);
+            else setFiles((prev) => [...prev, a]);
+          } catch (e) {
+            ui.toast(e.message, 'error');
+          }
+        }
+        if (list.length > room) ui.toast(`Only the first ${room} were added.`);
+        setProcessing(false);
+        taRef.current?.focus();
+        return;
+      }
       const room = MAX_IMAGES_PER_MESSAGE - images.length;
       if (room <= 0) {
         ui.toast(`Up to ${MAX_IMAGES_PER_MESSAGE} images per message.`, 'error');
@@ -105,19 +134,21 @@ const ChatInput = forwardRef(function ChatInput({ character, busy, onSend, onSto
       setProcessing(false);
       taRef.current?.focus();
     },
-    [images.length, ui],
+    [images.length, files.length, isAsst, ui],
   );
 
   useImperativeHandle(ref, () => ({ addFiles, focus: () => taRef.current?.focus() }), [addFiles]);
 
-  const canSend = !busy && !processing && !fuel.refueling && (text.trim() || images.length) && text.length <= MAX_LEN;
+  const maxLen = isAsst ? 40_000 : MAX_LEN;
+  const canSend = !busy && !processing && !fuel.refueling && (text.trim() || images.length || files.length) && text.length <= maxLen;
 
   const submit = async () => {
     if (!canSend) return;
-    const ok = await onSend(text, images);
+    const ok = await onSend(text, images, files);
     if (ok !== false) {
       setText('');
       setImages([]);
+      setFiles([]);
       setHelper(null);
     }
   };
@@ -130,10 +161,10 @@ const ChatInput = forwardRef(function ChatInput({ character, busy, onSend, onSto
   };
 
   const onPaste = (e) => {
-    const files = imageFilesFrom(e.clipboardData);
-    if (!files.length) return;
+    const pasted = isAsst ? [...(e.clipboardData?.files || [])] : imageFilesFrom(e.clipboardData);
+    if (!pasted.length) return;
     if (!e.clipboardData.getData('text/plain')) e.preventDefault();
-    addFiles(files);
+    addFiles(pasted);
   };
 
   const visionWarning = images.length > 0 && status.provider === 'deepseek' && !supportsVision(settings.model);
@@ -168,8 +199,21 @@ const ChatInput = forwardRef(function ChatInput({ character, busy, onSend, onSto
         </div>
       )}
 
-      {(images.length > 0 || processing) && (
+      {(images.length > 0 || files.length > 0 || processing) && (
         <div className="attachments">
+          {files.map((f) => (
+            <div key={f.id} className="attachment attachment-file" title={f.name}>
+              <FileText size={18} />
+              <span className="attachment-file-name">{f.name}</span>
+              <span className="attachment-file-meta">
+                {f.pages ? `${f.pages}p · ` : ''}
+                {formatBytes(f.bytes)}
+              </span>
+              <button type="button" className="attachment-remove" onClick={() => setFiles((prev) => prev.filter((x) => x.id !== f.id))} aria-label={`Remove ${f.name}`}>
+                <X size={12} />
+              </button>
+            </div>
+          ))}
           {images.map((img) => (
             <div key={img.id} className="attachment">
               <img src={img.dataUrl} alt={img.name} />
@@ -228,8 +272,8 @@ const ChatInput = forwardRef(function ChatInput({ character, busy, onSend, onSto
       )}
 
       <div className="composer-row">
-        <div className="composer-box">
-          <PersonaPicker />
+        <div className={`composer-box ${isAsst ? 'asst' : ''}`}>
+          {!isAsst && <PersonaPicker />}
           <textarea
             ref={taRef}
             id={`composer-${character.id}`}
@@ -239,20 +283,50 @@ const ChatInput = forwardRef(function ChatInput({ character, busy, onSend, onSto
             onChange={(e) => setText(e.target.value)}
             onKeyDown={onKeyDown}
             onPaste={onPaste}
-            placeholder={fuel.refueling ? 'Refueling…' : 'Message…'}
+            placeholder={fuel.refueling ? 'Refueling…' : isAsst ? 'Ask anything…' : 'Message…'}
             aria-label={`Message ${character.name}`}
             disabled={fuel.refueling}
           />
-          {busy ? (
-            <button type="button" className="send-btn stop" onClick={onStop} aria-label="Stop generating" title="Stop">
-              <Square size={13} fill="currentColor" />
-            </button>
+          {isAsst ? (
+            <div className="composer-tools">
+              <button type="button" className="ctool" onClick={() => fileRef.current?.click()} aria-label="Attach images or files" title="Attach images or files (text, code, CSV, JSON, PDF)" disabled={fuel.refueling}>
+                <Paperclip size={17} />
+              </button>
+              <button type="button" className={`ctool toggle ${opts.web ? 'on' : ''}`} onClick={() => toggle('web')} aria-pressed={!!opts.web} title={opts.web ? 'Web search is on' : 'Web search is off'}>
+                <Globe size={16} />
+                <span>Search</span>
+              </button>
+              <button type="button" className={`ctool toggle ${opts.thinking ? 'on' : ''}`} onClick={() => toggle('thinking')} aria-pressed={!!opts.thinking} title={opts.thinking ? 'Thinking is on: slower, more careful' : 'Thinking is off: faster'}>
+                <Lightbulb size={16} />
+                <span>Think</span>
+              </button>
+              <span style={{ flex: 1 }} />
+            {busy ? (
+              <button type="button" className="send-btn stop" onClick={onStop} aria-label="Stop generating" title="Stop">
+                <Square size={13} fill="currentColor" />
+              </button>
+            ) : (
+              <button type="button" className="send-btn" onClick={submit} disabled={!canSend} aria-label="Send">
+                <SendHorizontal size={19} fill="currentColor" />
+              </button>
+            )}
+            </div>
           ) : (
-            <button type="button" className="send-btn" onClick={submit} disabled={!canSend} aria-label="Send">
-              <SendHorizontal size={19} fill="currentColor" />
-            </button>
+            <>
+            {busy ? (
+              <button type="button" className="send-btn stop" onClick={onStop} aria-label="Stop generating" title="Stop">
+                <Square size={13} fill="currentColor" />
+              </button>
+            ) : (
+              <button type="button" className="send-btn" onClick={submit} disabled={!canSend} aria-label="Send">
+                <SendHorizontal size={19} fill="currentColor" />
+              </button>
+            )}
+            </>
           )}
         </div>
+        {!isAsst && (
+        <>
         <button
           type="button"
           className={`circle-btn lg help-btn ${helper ? 'on' : ''}`}
@@ -273,10 +347,12 @@ const ChatInput = forwardRef(function ChatInput({ character, busy, onSend, onSto
         >
           <ImagePlus size={20} />
         </button>
+        </>
+        )}
         <input
           ref={fileRef}
           type="file"
-          accept={ACCEPTED_TYPES.join(',')}
+          accept={isAsst ? ACCEPT_ALL : ACCEPTED_TYPES.join(',')}
           multiple
           hidden
           onChange={(e) => {
@@ -286,7 +362,7 @@ const ChatInput = forwardRef(function ChatInput({ character, busy, onSend, onSto
         />
       </div>
       <button type="button" className="disclaimer" onClick={() => setShowInfo((v) => !v)} aria-expanded={showInfo}>
-        This is A.I. and not a real person. Treat everything it says as fiction
+        {isAsst ? 'Charcoal can make mistakes. Check anything important.' : 'This is A.I. and not a real person. Treat everything it says as fiction'}
         <ChevronDown size={14} className={showInfo ? 'flip' : ''} />
       </button>
       {showInfo && (

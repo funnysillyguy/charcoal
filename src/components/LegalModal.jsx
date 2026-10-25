@@ -46,13 +46,13 @@ function Terms() {
           abuse the built-in AI: scripts, bots, shared or resold accounts, or making many accounts to get around the daily
           limit;
         </li>
-        <li>attack the site, other users, or the code sandbox.</li>
+        <li>attack the site, other users, or the code sandbox, or use Charcoal Chat’s web access to reach private systems.</li>
       </ul>
 
       <h2>The built-in AI</h2>
       <p>
-        The built-in AI is free, comes with a daily limit, and is paid for by the owner. It can be changed, limited or
-        switched off at any time. If you add your own DeepSeek key instead, you’re responsible for that account and
+        The built-in AI is free, comes with a daily limit, and is paid for by the owner. Replies that contain code count
+        three times toward that limit and toward the reply break. It can be changed, limited or switched off at any time. If you add your own DeepSeek key instead, you’re responsible for that account and
         anything it costs.
       </p>
 
@@ -131,7 +131,11 @@ function Privacy() {
         </li>
         <li>
           <b>How much of the built-in AI you used each day</b> (a token count, not your messages), to enforce the daily
-          limit.
+          limit. Replies with code count three times.
+        </li>
+        <li>
+          <b>How many web searches and page opens you ran each day</b> in Charcoal Chat (counts only, not what you
+          searched), to enforce a daily limit.
         </li>
         <li>
           <b>Notifications</b>, like a thanks someone sent you. A thanks you send shows your username to the person who
@@ -146,6 +150,23 @@ function Privacy() {
         policy, and its servers may be in China. If you use your own key, your browser talks to DeepSeek directly and our
         server isn’t involved.
       </p>
+
+      <h2>Charcoal Chat</h2>
+      <ul>
+        <li>
+          Its conversations are stored on your device, like your other chats.
+        </li>
+        <li>
+          If you ask it about your other chats, it searches and reads them right here on your device and sends only the
+          parts it needs to DeepSeek with your message. It doesn’t look unless you ask.
+        </li>
+        <li>Files you attach are stored on your device and sent to DeepSeek as part of your message.</li>
+        <li>
+          With web search on, the searches and pages it looks up go through our server to Google News, Wikipedia and
+          DuckDuckGo’s answer service (and Brave Search, if it’s enabled). Those services see the search, not who you are.
+          We don’t store what you searched.
+        </li>
+      </ul>
 
       <h2>Other services Charcoal uses</h2>
       <ul>

@@ -46,17 +46,26 @@ export function parseExamples(raw) {
   return turns.map((t) => ({ ...t, text: t.text.replace(/\n{3,}/g, '\n\n').trim() })).filter((t) => t.text);
 }
 
-const CANVAS_RULES = [
-  '# Charcoal Canvas (only for this request)',
-  '{{user}} asked for something that needs code. Charcoal has a built-in sandboxed canvas, so write the code in your own voice and let it run there.',
-  '- Websites, pages, apps, games, UI, animations, visuals: write ONE complete, self-contained ```html code block (a full document: <!doctype html>, a <title>, all CSS in <style>, all JavaScript in <script>). It renders live while you write, so put the <style> first, then the markup, and the <script> last.',
-  '- The sandbox has no internet. Never link external files, CDNs, web fonts, images, iframes or API calls; they are blocked. Draw with CSS, inline SVG and <canvas>. Make it responsive.',
-  '- Design it like a real designer would, not like a typical AI-made site. Pick one specific direction that fits the request (editorial, brutalist, retro, playful, minimal, technical...) and commit to it. Avoid every one of these AI-site tells: harsh or rainbow gradients, purple-and-black or neon palettes, washed-out pastel palettes, glass/blur effects, glowing blurred orbs, dot-grid backgrounds, heavy drop shadows, everything with big soft rounded corners, a plain pure-white page, three feature cards in a row, bento grids, a fake terminal window, colored left-border stripes on cards, checkmark bullet lists, three pricing tiers, made-up testimonials or stats, sparkle icons, emoji used as icons, arrows that slide on hover, hover animations on everything, em dashes, and "it\'s not X, it\'s Y" copy.',
-  '- Instead: a deliberate color palette with one strong accent, real typographic hierarchy (system font stacks used well, e.g. Georgia/Palatino for a serif, ui-monospace for mono, or system-ui), crisp borders, sensible spacing, specific realistic copy, and real working interactivity when it fits.',
-  '- To change something, send the whole updated file again, in a new ```html block.',
-  '- Math, data analysis, statistics, simulations, charts: write a ```python code block (standard library, numpy, pandas and matplotlib are available). Put the data inside the code and print() the results. {{user}} can run it in the chat and send you the output, then you can explain it.',
-  '- Text outside the code block stays short (one or two sentences, in character). The sentence limit applies only to that text, never to the code. Do not use ``` anywhere inside the code.',
-].join('\n');
+/** Canvas instructions. Roleplay replies stay in character; Charcoal Chat speaks as itself. */
+export function canvasRules({ assistant = false } = {}) {
+  const who = assistant ? 'the user' : '{{user}}';
+  return [
+    assistant ? '# Charcoal Canvas' : '# Charcoal Canvas (only for this request)',
+    assistant
+      ? 'The user asked for something that needs code. Charcoal has a built-in sandboxed canvas that renders it live as you write.'
+      : '{{user}} asked for something that needs code. Charcoal has a built-in sandboxed canvas, so write the code in your own voice and let it run there.',
+    '- Websites, pages, apps, games, UI, animations, visuals: write ONE complete, self-contained ```html code block (a full document: <!doctype html>, a <title>, all CSS in <style>, all JavaScript in <script>). It renders live while you write, so put the <style> first, then the markup, and the <script> last.',
+    '- The sandbox has no internet. Never link external files, CDNs, web fonts, images, iframes or API calls; they are blocked. Draw with CSS, inline SVG and <canvas>. Make it responsive.',
+    '- Design it like a real designer would, not like a typical AI-made site. Pick one specific direction that fits the request (editorial, brutalist, retro, playful, minimal, technical...) and commit to it. Avoid every one of these AI-site tells: harsh or rainbow gradients, purple-and-black or neon palettes, washed-out pastel palettes, glass/blur effects, glowing blurred orbs, dot-grid backgrounds, heavy drop shadows, everything with big soft rounded corners, a plain pure-white page, three feature cards in a row, bento grids, a fake terminal window, colored left-border stripes on cards, checkmark bullet lists, three pricing tiers, made-up testimonials or stats, sparkle icons, emoji used as icons, arrows that slide on hover, hover animations on everything, em dashes, and "it\'s not X, it\'s Y" copy.',
+    '- Instead: a deliberate color palette with one strong accent, real typographic hierarchy (system font stacks used well, e.g. Georgia/Palatino for a serif, ui-monospace for mono, or system-ui), crisp borders, sensible spacing, specific realistic copy, and real working interactivity when it fits.',
+    '- To change something, send the whole updated file again, in a new ```html block.',
+    `- Math, data analysis, statistics, simulations, charts: write a \`\`\`python code block (standard library, numpy, pandas and matplotlib are available). Put the data inside the code (or read attached files from data/) and print() the results. ${who === 'the user' ? 'The user' : who} can run it in the chat and send you the output, then you can explain it.`,
+    assistant
+      ? '- Keep the text around the code short and useful: what you built and how to use it. Do not use ``` anywhere inside the code.'
+      : '- Text outside the code block stays short (one or two sentences, in character). The sentence limit applies only to that text, never to the code. Do not use ``` anywhere inside the code.',
+  ].join('\n');
+}
+const CANVAS_RULES = canvasRules();
 
 export function buildSystemPrompt({ character, persona, mood, swipeDrafts = [], alternate = false, maxSentences = 0, canvas = false }) {
   const names = { user: persona?.name || 'User', char: character.name };
@@ -140,7 +149,7 @@ function activeText(msg) {
  * - consecutive same-role turns are merged so roles alternate cleanly
  * - oldest turns are dropped first when over HISTORY_CHAR_BUDGET (greeting is always kept)
  */
-export async function buildHistory({ messages, uptoIndex, names }) {
+export async function buildHistory({ messages, uptoIndex, names, budget = HISTORY_CHAR_BUDGET }) {
   const slice = messages.slice(0, uptoIndex);
   const turns = [];
   for (const m of slice) {
@@ -158,7 +167,7 @@ export async function buildHistory({ messages, uptoIndex, names }) {
   for (let i = turns.length - 1; i >= 0; i--) {
     const t = turns[i];
     const cost = t.text.length + t.images.length * 1500;
-    if (t.greeting || total + cost <= HISTORY_CHAR_BUDGET || kept.length < 2) {
+    if (t.greeting || total + cost <= budget || kept.length < 2) {
       kept.unshift(t);
       total += cost;
     } else if (!kept.some((k) => k.omittedMarker)) {

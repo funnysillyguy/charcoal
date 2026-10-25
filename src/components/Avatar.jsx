@@ -16,6 +16,15 @@ export default function Avatar({ avatar, name = '', size = 40, radius, round = f
     );
   }
 
+  if (avatar?.kind === 'logo') {
+    // Charcoal Chat: the app's own mark
+    return (
+      <span className={`avatar avatar-logo ${className}`} style={style} aria-hidden="true">
+        <span className="logo-mark" style={{ width: Math.round(size * 0.56), height: Math.round(size * 0.56) }} />
+      </span>
+    );
+  }
+
   const [base, light] = avatar?.palette || ['#2a2a2e', '#d8d8de'];
 
   if (avatar?.kind === 'portrait' && avatar.portrait) {

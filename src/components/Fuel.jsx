@@ -46,7 +46,7 @@ export function FuelGauge() {
               <div className="fuel-pop-bar">
                 <span style={{ transform: `scaleX(${fuel.fraction})` }} />
               </div>
-              <p className="fuel-pop-hint">Everything the AI writes counts: each reply draft (3 at once = 3), every swipe and regeneration, and each Help me write idea.</p>
+              <p className="fuel-pop-hint">Everything the AI writes counts: each reply draft (3 at once = 3), every swipe and regeneration, and each Help me write idea. Replies with code count 3x, here and toward the daily limit.</p>
             </>
           )}
         </div>

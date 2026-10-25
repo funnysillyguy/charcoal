@@ -1,0 +1,308 @@
+/* Charcoal Chat: start screen, tool steps, file chips, the message bar's tools, richer Markdown */
+
+.avatar-logo {
+  display: inline-grid;
+  place-items: center;
+  background: #1f1f23;
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  flex: none;
+}
+.avatar-logo .logo-mark {
+  border-radius: 28%;
+}
+
+/* ---------- start screen ---------- */
+.asst-start {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 9vh 4px 12px;
+  gap: 10px;
+}
+.asst-start-mark {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  margin-bottom: 6px;
+}
+.asst-start-mark::after {
+  left: 8px;
+  right: 6px;
+  height: 5px;
+}
+.asst-start h1 {
+  margin: 0;
+  font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2rem);
+  letter-spacing: -0.02em;
+}
+.asst-start p {
+  margin: 0;
+  max-width: 460px;
+  color: var(--text-2);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.asst-ideas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+  max-width: 560px;
+  margin-top: 18px;
+}
+.asst-idea {
+  text-align: left;
+  padding: 12px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--text-msg);
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+.asst-idea:hover {
+  background: var(--raised);
+  color: var(--text);
+}
+@media (max-width: 560px) {
+  .asst-ideas {
+    grid-template-columns: 1fr;
+  }
+  .asst-start {
+    padding-top: 5vh;
+  }
+}
+
+/* ---------- tool steps on a reply ---------- */
+.act-list {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+.msg-pending + .act-list,
+.act-list + .msg-pending {
+  margin-top: 6px;
+}
+.act {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  font-size: 0.8rem;
+  color: var(--text-2);
+  line-height: 1.4;
+}
+.act svg {
+  flex: none;
+  color: var(--text-3);
+}
+.act.running .act-text {
+  color: var(--text);
+}
+.act-detail {
+  color: var(--text-3);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+}
+.act-link {
+  display: inline-grid;
+  place-items: center;
+  color: var(--text-3);
+}
+.act-link:hover {
+  color: var(--text);
+}
+.act.error .act-text {
+  text-decoration: line-through;
+  text-decoration-color: var(--text-3);
+}
+.act-err {
+  flex-basis: 100%;
+  padding-left: 21px;
+  color: #e9a3a3;
+  font-size: 0.75rem;
+}
+
+/* ---------- files on messages and in the composer ---------- */
+.msg-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.file-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  background: rgba(0, 0, 0, 0.18);
+  font-size: 0.82rem;
+}
+.file-chip-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 220px;
+}
+.file-chip-meta {
+  color: var(--text-3);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+.attachment.attachment-file {
+  width: auto;
+  max-width: 220px;
+  height: 56px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 8px;
+  align-items: center;
+  align-content: center;
+  padding: 0 28px 0 10px;
+  border-radius: var(--r-md);
+}
+.attachment-file svg {
+  grid-row: span 2;
+  color: var(--text-2);
+}
+.attachment-file-name {
+  font-size: 0.8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.attachment-file-meta {
+  font-size: 0.68rem;
+  font-family: var(--font-mono);
+  color: var(--text-3);
+}
+
+/* ---------- message bar: text on top, tools underneath ---------- */
+.composer-box.asst {
+  flex-direction: column;
+  align-items: stretch;
+  border-radius: var(--r-lg);
+  padding: 6px 8px 8px 10px;
+  gap: 2px;
+}
+.composer-box.asst .composer-input {
+  padding: 10px 4px 6px;
+  min-height: 44px;
+}
+.composer-tools {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.ctool {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  min-width: 34px;
+  justify-content: center;
+  padding: 0 10px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line-strong);
+  color: var(--text-2);
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+.ctool:first-child {
+  padding: 0;
+  width: 34px;
+}
+.ctool:hover:not(:disabled) {
+  color: var(--text);
+  background: var(--raised);
+}
+.ctool.toggle.on {
+  color: var(--accent-ink);
+  background: var(--text);
+  border-color: var(--text);
+}
+.ctool:disabled {
+  opacity: 0.4;
+}
+.composer-tools .send-btn {
+  width: 38px;
+  height: 38px;
+}
+@media (max-width: 380px) {
+  .ctool.toggle span {
+    display: none;
+  }
+  .ctool.toggle {
+    padding: 0;
+    width: 34px;
+  }
+}
+
+/* ---------- Markdown: links, headings, rules, tables ---------- */
+.md-link {
+  color: var(--text);
+  text-decoration: underline;
+  text-decoration-color: #6b6b73;
+  text-underline-offset: 2px;
+  overflow-wrap: anywhere;
+}
+.md-link:hover {
+  text-decoration-color: var(--text);
+}
+.md .md-h {
+  margin: 14px 0 4px;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+.md h2.md-h {
+  font-size: 1.12rem;
+}
+.md h3.md-h {
+  font-size: 1.02rem;
+}
+.md h4.md-h,
+.md h5.md-h {
+  font-size: 0.95rem;
+}
+.md .md-h:first-child {
+  margin-top: 0;
+}
+.md-hr {
+  border: 0;
+  border-top: 1px solid var(--line-strong);
+  margin: 14px 0;
+}
+.md-table-wrap {
+  overflow-x: auto;
+  margin: 8px 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+}
+.md-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.88rem;
+}
+.md-table th,
+.md-table td {
+  padding: 7px 10px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line);
+}
+.md-table th {
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.03);
+  white-space: nowrap;
+}
+.md-table tr:last-child td {
+  border-bottom: 0;
+}

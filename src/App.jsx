@@ -9,6 +9,7 @@ import NotificationsPanel from './components/NotificationsPanel.jsx';
 import CanvasPanel from './components/Canvas/CanvasPanel.jsx';
 import LegalModal from './components/LegalModal.jsx';
 import { useCanvas } from './lib/canvas.js';
+import { assistantCharacter, isAssistantId, newAssistantId } from './lib/assistant.js';
 import { useSocial } from './lib/social.js';
 import { useCloudSync } from './lib/sync.js';
 import CharacterCreator from './pages/CharacterCreator.jsx';
@@ -18,7 +19,7 @@ import { UIContext, useToasts, ToastStack } from './components/ui.jsx';
 import { StoreProvider, useStore } from './lib/store.jsx';
 
 function Shell() {
-  const { state, dispatch } = useStore();
+  const { state, dispatch, getState } = useStore();
   const [view, setView] = useState({ name: 'home' });
   const [drawer, setDrawer] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -72,7 +73,21 @@ function Shell() {
     () => ({
       goHome,
       openChat,
+      // Charcoal Chat: open a thread, or start one (reusing an empty one so "Chat" never piles up blanks).
+      openAssistant: (id) => {
+        let target = id;
+        if (!target) {
+          const chats = getState().chats;
+          target = Object.keys(chats).find((k) => isAssistantId(k) && !chats[k].messages.length) || newAssistantId();
+        }
+        dispatch({ type: 'chat/ensure', character: assistantCharacter(target) });
+        setView({ name: 'chat', id: target });
+        setCreator(null);
+        setDrawer(false);
+        setProfileId(null);
+      },
       openProfile: (id) => {
+        if (isAssistantId(id)) return;
         setProfileId(id);
         setDrawer(false);
       },
@@ -113,7 +128,7 @@ function Shell() {
       },
       toast: push,
     }),
-    [goHome, openChat, push],
+    [goHome, openChat, push, dispatch, getState],
   );
 
   if (!state.hydrated) {

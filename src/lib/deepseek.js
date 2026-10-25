@@ -84,6 +84,7 @@ function networkError(err, baseUrl) {
  *   { type: 'reasoning', text } chain-of-thought tokens (thinking mode only)
  *   { type: 'finish', reason }  finish_reason from the API
  *   { type: 'usage', usage }    token usage, when the API includes it
+ *   { type: 'tool_call', index, id, name, args }  a piece of a function call (name/args arrive in parts)
  */
 export async function* streamChat({ baseUrl, apiKey, body, signal, headers = {} }) {
   let res;
@@ -111,6 +112,8 @@ export async function* streamChat({ baseUrl, apiKey, body, signal, headers = {} 
     const msg = json?.choices?.[0]?.message || {};
     if (msg.reasoning_content) yield { type: 'reasoning', text: msg.reasoning_content };
     if (msg.content) yield { type: 'content', text: msg.content };
+    for (const [i, tc] of (msg.tool_calls || []).entries())
+      yield { type: 'tool_call', index: tc.index ?? i, id: tc.id, name: tc.function?.name, args: tc.function?.arguments || '' };
     yield { type: 'finish', reason: json?.choices?.[0]?.finish_reason || 'stop' };
     if (json.usage) yield { type: 'usage', usage: json.usage };
     return;
@@ -154,6 +157,8 @@ export async function* streamChat({ baseUrl, apiKey, body, signal, headers = {} 
         const delta = choice?.delta || {};
         if (delta.reasoning_content) yield { type: 'reasoning', text: delta.reasoning_content };
         if (delta.content) yield { type: 'content', text: delta.content };
+        for (const tc of delta.tool_calls || [])
+          yield { type: 'tool_call', index: tc.index ?? 0, id: tc.id, name: tc.function?.name, args: tc.function?.arguments || '' };
         if (choice?.finish_reason) yield { type: 'finish', reason: choice.finish_reason };
         if (json.usage) yield { type: 'usage', usage: json.usage };
       }

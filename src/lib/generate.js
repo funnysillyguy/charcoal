@@ -5,6 +5,7 @@ import { demoStream } from './demoEngine.js';
 import { SANDBOXED } from './settings.js';
 import { resolveEndpoint } from './endpoint.js';
 import { getSample, sampleStream, toSampleTurns } from './hostAI.js';
+import { assistantStream, buildAssistantMessages } from './assistant.js';
 
 /**
  * Generate one draft (variant) of a character message.
@@ -16,7 +17,11 @@ import { getSample, sampleStream, toSampleTurns } from './hostAI.js';
  *   parallel — extra drafts fired alongside the primary one (swipe temperature 0.85–1.0)
  *   regen    — a one-at-a-time regeneration (swipe temperature, told to avoid earlier drafts)
  */
-export async function* generateReply({ character, persona, chat, messageId, variantId, kind, settings, signal }) {
+export async function* generateReply({ character, persona, chat, messageId, variantId, kind, settings, signal, getState }) {
+  if (character?.kind === 'assistant') {
+    yield* assistantReply({ character, persona, chat, messageId, settings, signal, getState });
+    return;
+  }
   const index = chat.messages.findIndex((m) => m.id === messageId);
   const target = chat.messages[index];
   const previousUser = [...chat.messages.slice(0, index)].reverse().find((m) => m.role === 'user');
@@ -73,4 +78,29 @@ export async function* generateReply({ character, persona, chat, messageId, vari
   });
   yield { type: 'meta', meta: { provider: ep.shared ? 'shared' : 'deepseek', kind, ...meta } };
   yield* streamChat({ baseUrl: ep.baseUrl, apiKey: ep.apiKey, headers: ep.headers, body, signal });
+}
+
+/** Charcoal Chat: DeepSeek with tools (your chats, the web). Offline and hosted-preview fallbacks keep it usable. */
+async function* assistantReply({ character, persona, chat, messageId, settings, signal, getState }) {
+  const index = chat.messages.findIndex((m) => m.id === messageId);
+  const sample = SANDBOXED ? await getSample() : null;
+  if (sample) {
+    const { messages } = await buildAssistantMessages({ chat, uptoIndex: index, persona, settings });
+    const { turns, images } = toSampleTurns(messages, 'Charcoal');
+    yield { type: 'meta', meta: { provider: 'claude', model: 'Claude' } };
+    yield* sampleStream({ sample, turns, images, signal });
+    return;
+  }
+  const ep = await resolveEndpoint(settings);
+  if (!ep) {
+    yield { type: 'meta', meta: { provider: 'demo' } };
+    yield {
+      type: 'content',
+      text: 'Charcoal Chat needs the AI to be connected. Sign in (free) to use the built-in AI, or add your own DeepSeek key in Settings.',
+    };
+    yield { type: 'finish', reason: 'stop' };
+    return;
+  }
+  yield { type: 'meta', meta: { provider: ep.shared ? 'shared' : 'deepseek', model: ep.model } };
+  yield* assistantStream({ ep, chat, messageId, persona, settings: { ...settings, model: ep.model }, getState, selfId: character.id, signal });
 }

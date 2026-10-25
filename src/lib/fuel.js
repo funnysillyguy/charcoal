@@ -7,6 +7,7 @@ import { local } from './storage.js';
 const KEY = 'charcoal:fuel';
 export const DEFAULT_CAPACITY = 100; // replies
 export const REFUEL_MS = 25_000;
+export const CODE_COST = 3; // a reply that contains code counts as 3 replies (the server also counts its tokens 3x)
 const VERSION = 3; // bump when the defaults change so old saved tanks reset to them
 
 let state = normalize(local.get(KEY, null));
