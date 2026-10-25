@@ -4,6 +4,7 @@ import Home from './pages/Home.jsx';
 import ChatWindow from './components/Chat/ChatWindow.jsx';
 import SettingsModal from './components/SettingsModal.jsx';
 import AccountModal from './components/AccountModal.jsx';
+import OwnKeyGuide from './components/OwnKeyGuide.jsx';
 import { useCloudSync } from './lib/sync.js';
 import CharacterCreator from './pages/CharacterCreator.jsx';
 import CharacterProfileModal from './components/CharacterProfileModal.jsx';
@@ -17,6 +18,7 @@ function Shell() {
   const [drawer, setDrawer] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
   useCloudSync();
   const [creator, setCreator] = useState(null); // null | { character?, remix?, name? }
   const [profileId, setProfileId] = useState(null);
@@ -60,6 +62,10 @@ function Shell() {
       },
       openAccount: () => {
         setAccountOpen(true);
+        setDrawer(false);
+      },
+      openGuide: () => {
+        setGuideOpen(true);
         setDrawer(false);
       },
       // Phones: slide-in drawer. Desktop: re-open a collapsed sidebar.
@@ -107,6 +113,7 @@ function Shell() {
       <RefuelOverlay />
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} onSaved={() => push('Settings saved', 'ok')} />
       <AccountModal open={accountOpen} onClose={() => setAccountOpen(false)} />
+      <OwnKeyGuide open={guideOpen} onClose={() => setGuideOpen(false)} onOpenSettings={() => setSettingsOpen(true)} />
       <ToastStack toasts={toasts} />
     </UIContext.Provider>
   );

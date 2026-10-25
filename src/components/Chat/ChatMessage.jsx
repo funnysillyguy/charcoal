@@ -5,6 +5,7 @@ import {
   Copy,
   KeyRound,
   MoonStar,
+  PlayCircle,
   MoreHorizontal,
   RefreshCw,
   RotateCcw,
@@ -20,7 +21,8 @@ import { useSwipeGesture } from './useSwipeGesture.js';
 import { usePopover, useUI } from '../ui.jsx';
 import { Markdown } from '../../lib/markdown.jsx';
 import { useImageUrl } from '../../lib/images.js';
-import { fillNames } from '../../lib/format.js';
+import { fillNames, resetInfo } from '../../lib/format.js';
+import { refreshShared } from '../../lib/endpoint.js';
 import { MAX_SWIPES } from '../../lib/settings.js';
 
 function TypingDots() {
@@ -102,21 +104,12 @@ function MessageMenu({ text, onDelete, onSpeak, speaking }) {
 
 const SETTINGS_KINDS = new Set(['auth', 'model', 'vision', 'balance', 'network', 'builtin']);
 
-/** Next midnight UTC (when the built-in AI allowance resets), in the viewer's own time. */
-function resetInfo() {
-  const now = new Date();
-  const reset = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
-  const mins = Math.max(1, Math.round((reset - now) / 60000));
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
-  return {
-    at: reset.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
-    left: h ? `${h}h ${m}m` : `${m}m`,
-  };
-}
-
 function LimitCard({ onSettings }) {
+  const ui = useUI();
   const { at, left } = resetInfo();
+  useEffect(() => {
+    refreshShared(); // so the home banner knows too
+  }, []);
   return (
     <div className="msg-limit" role="status">
       <span className="msg-limit-icon" aria-hidden="true">
@@ -128,7 +121,10 @@ function LimitCard({ onSettings }) {
           It refills at <b>{at}</b> (in {left}). Want to keep going now? Add your own DeepSeek key and it’s unlimited.
         </p>
         <div className="msg-error-actions">
-          <button type="button" className="btn btn-primary btn-sm" onClick={onSettings}>
+          <button type="button" className="btn btn-primary btn-sm" onClick={ui.openGuide}>
+            <PlayCircle size={13} /> Show me how
+          </button>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={onSettings}>
             <KeyRound size={13} /> Add my own key
           </button>
         </div>

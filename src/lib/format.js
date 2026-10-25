@@ -49,3 +49,17 @@ export function formatBytes(b) {
 export function firstName(name) {
   return String(name || '').split(/\s+/)[0] || name;
 }
+
+/** Next midnight UTC (when the built-in AI allowance resets), in the viewer's own time. */
+export function resetInfo() {
+  const now = new Date();
+  const reset = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+  const mins = Math.max(1, Math.round((reset - now) / 60000));
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return {
+    at: reset.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
+    left: h ? `${h}h ${m}m` : `${m}m`,
+  };
+}
+

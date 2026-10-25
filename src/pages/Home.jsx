@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import Navbar, { SearchPill } from '../components/Layout/Navbar.jsx';
 import Hero from '../components/discover/Hero.jsx';
+import LimitBanner from '../components/discover/LimitBanner.jsx';
 import { ContinueRow, TileRow } from '../components/discover/Rows.jsx';
 import CategoryTabs from '../components/CategoryTabs.jsx';
 import CharacterGrid from '../components/CharacterGrid.jsx';
@@ -58,6 +59,7 @@ export default function Home() {
             </div>
           ) : (
             <>
+              <LimitBanner />
               <Hero characters={featured} />
               <ContinueRow />
               <TileRow title="Trending" characters={trending} />

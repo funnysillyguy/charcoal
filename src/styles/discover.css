@@ -566,3 +566,84 @@
     width: 36px;
   }
 }
+
+/* Daily-limit banner on Discover */
+.limit-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 20px;
+  background: linear-gradient(160deg, rgba(160, 150, 255, 0.12), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(180, 170, 255, 0.24);
+  animation: tile-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.limit-banner-text {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+.limit-banner-text p {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+  line-height: 1.5;
+}
+.limit-banner-text b {
+  color: var(--text);
+  font-weight: 600;
+}
+.limit-banner .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+@media (max-width: 640px) {
+  .limit-banner {
+    flex-wrap: wrap;
+  }
+  .limit-banner-actions {
+    width: 100%;
+  }
+  .limit-banner-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Own-key guide */
+.guide {
+  display: grid;
+  gap: 16px;
+}
+.guide-video {
+  width: 100%;
+  max-height: 58vh;
+  border-radius: 16px;
+  background: #0d0d10;
+  border: 1px solid var(--line-strong);
+  object-fit: contain;
+}
+.guide-steps {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 8px;
+  font-size: var(--fs-sm);
+  line-height: 1.55;
+  color: var(--text-2);
+}
+.guide-steps strong {
+  color: var(--text);
+}
+.guide-steps a {
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.guide-steps code {
+  font-size: 12px;
+}
