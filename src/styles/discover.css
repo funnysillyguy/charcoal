@@ -619,12 +619,21 @@
   gap: 16px;
 }
 .guide-video {
-  width: 100%;
-  max-height: 58vh;
-  border-radius: 16px;
-  background: #0d0d10;
-  border: 1px solid var(--line-strong);
-  object-fit: contain;
+  /* A phone-shaped video: size it by height and keep its shape, no black letterbox */
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: min(62vh, 620px);
+  margin: 0 auto;
+  border-radius: 22px;
+  background: #100d0d;
+  box-shadow: 0 0 0 1px var(--line-strong), 0 20px 50px -20px rgba(0, 0, 0, 0.8);
+  aspect-ratio: 720 / 1676;
+}
+@media (max-width: 640px) {
+  .guide-video {
+    height: min(70vh, 640px);
+  }
 }
 .guide-steps {
   margin: 0;
@@ -646,4 +655,28 @@
 }
 .guide-steps code {
   font-size: 12px;
+}
+.guide-player {
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
+}
+.guide-sound {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: 0;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(12, 12, 14, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  cursor: pointer;
 }

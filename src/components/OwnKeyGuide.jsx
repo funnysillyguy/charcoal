@@ -1,14 +1,41 @@
 // "Add your own key" walkthrough: a cursor-following screen recording plus the steps in writing.
-import { ExternalLink, KeyRound } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { ExternalLink, KeyRound, Volume2, VolumeX } from 'lucide-react';
 import { Modal } from './ui.jsx';
 
 const VIDEO = `${import.meta.env.BASE_URL || './'}guide-own-key.mp4`;
 
 export default function OwnKeyGuide({ open, onClose, onOpenSettings }) {
+  const videoRef = useRef(null);
+  const [muted, setMuted] = useState(true);
+  const toggleSound = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = !v.muted;
+    if (!v.muted && v.paused) v.play().catch(() => {});
+    setMuted(v.muted);
+  };
   return (
     <Modal open={open} onClose={onClose} title="Keep chatting with your own key" subtitle="Unlimited, billed to your own DeepSeek account. Takes about 2 minutes." size="md">
       <div className="guide">
-        <video className="guide-video" src={VIDEO} autoPlay muted loop playsInline controls preload="auto" />
+        <div className="guide-player">
+          <video
+            ref={videoRef}
+            className="guide-video"
+            src={VIDEO}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            onClick={(e) => (e.currentTarget.paused ? e.currentTarget.play() : e.currentTarget.pause())}
+            onVolumeChange={(e) => setMuted(e.currentTarget.muted)}
+          />
+          <button type="button" className="guide-sound" onClick={toggleSound} aria-label={muted ? 'Turn sound on' : 'Mute'}>
+            {muted ? <VolumeX size={15} /> : <Volume2 size={15} />}
+            {muted ? 'Sound on' : 'Mute'}
+          </button>
+        </div>
         <ol className="guide-steps">
           <li>
             <strong>Get a key from DeepSeek.</strong> Go to{' '}
