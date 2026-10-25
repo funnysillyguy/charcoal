@@ -18,7 +18,7 @@ import {
 } from '../icons.jsx';
 import SandboxFrame from './SandboxFrame.jsx';
 import { useStore } from '../../lib/store.jsx';
-import { closeCanvas, kindOf, lineCount, pageTitle, parseFences, setCanvas, useCanvas } from '../../lib/canvas.js';
+import { closeCanvas, kindOf, lineCount, pageTitle, parseFences, partialHtml, setCanvas, useCanvas } from '../../lib/canvas.js';
 import { highlight } from '../../lib/highlight.js';
 
 function useThrottled(value, ms) {
@@ -113,6 +113,8 @@ export default function CanvasPanel() {
 
   const writing = !!block && !block.closed && (variant?.status === 'streaming' || variant?.status === 'pending');
   const code = block?.code || '';
+  // The reply ended before the block closed (ran out of room or was stopped): show what was built.
+  const incomplete = !!block && !block.closed && !writing;
   const lang = block?.lang === 'svg' ? 'html' : block?.lang || 'html';
 
   const copy = async () => {
@@ -142,7 +144,7 @@ export default function CanvasPanel() {
           <strong>{block ? pageTitle(code) : 'Nothing here'}</strong>
           {block && (
             <span className={`cv-status ${writing ? 'live' : ''}`}>
-              {writing ? `Writing · ${lineCount(code)} lines` : `${lineCount(code)} lines`}
+              {writing ? `Writing · ${lineCount(code)} lines` : incomplete ? `Cut off · ${lineCount(code)} lines` : `${lineCount(code)} lines`}
             </span>
           )}
         </div>
@@ -186,9 +188,10 @@ export default function CanvasPanel() {
           </section>
           <section className="cv-pane cv-pane-view" aria-label="Preview">
             <div className={`cv-stage ${cv.device === 'phone' ? 'phone' : ''}`}>
-              <SandboxFrame code={code} streaming={writing} reloadKey={reload} title={pageTitle(code)} />
+              <SandboxFrame code={incomplete ? partialHtml(code) : code} streaming={writing} reloadKey={reload} title={pageTitle(code)} />
             </div>
             {writing && <div className="cv-building">Building…</div>}
+            {incomplete && <div className="cv-building cv-cut">Cut off before the page finished. Swipe for a new reply or ask to continue.</div>}
           </section>
         </div>
       ) : (

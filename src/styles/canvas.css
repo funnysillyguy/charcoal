@@ -444,3 +444,11 @@
     animation: none;
   }
 }
+
+.cv-building.cv-cut {
+  left: 12px;
+  right: auto;
+  max-width: calc(100% - 24px);
+  color: var(--text);
+  border-radius: var(--r-sm);
+}

@@ -254,6 +254,10 @@ export async function buildRequest({ character, persona, chat, uptoIndex, isSwip
     body.reasoning_effort = 'medium';
     body.max_tokens += 2048; // reasoning tokens count against max_tokens
   }
-  if (codeAsked) body.max_tokens = 6000; // a whole page of code (the shared proxy caps at 6000)
+  if (codeAsked) {
+    // A whole page of code. Light thinking so the page starts sooner and the budget goes to the code.
+    body.max_tokens = 16000;
+    if (settings.thinking) body.reasoning_effort = 'low';
+  }
   return { body, meta: { temperature, model: settings.model, thinking: !!settings.thinking } };
 }

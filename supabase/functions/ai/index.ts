@@ -15,7 +15,7 @@ const DEFAULT_UPSTREAM = "https://api.deepseek.com/v1";
 const ALLOWED_MODELS = ["deepseek-flash"];
 const USER_DAILY_TOKENS = 300_000; // output tokens per person per day (~$0.18 at $0.60/M)
 const GLOBAL_DAILY_TOKENS = 4_000_000; // whole site per day (~$2.40)
-const MAX_TOKENS_CAP = 6000;
+const MAX_TOKENS_CAP = 16000; // a full Canvas page plus thinking; the daily cap still bounds spend
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
